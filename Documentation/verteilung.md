@@ -1,15 +1,14 @@
-Aufgabenverteilung
-------------------
+### Aufgabenverteilung
 
 
-Zeitmanagement
---------------
-16.01.2013: 1200 - 1500 Planung
-16.01.2013  1530 - 1930 Coding
+### Zeitmanagement
+16.01.2013:  1200 - 1500 Planung  
+16.01.2013:  1530 - 1930 Coding  
 
 
-TODO: 	Rahmenprogramm verbessern
-		Mehr Kommentare
-		Evtl. Optimierungen
-		Ausarbeitungen
-		Präsentation
+### To Do
+  - Rahmenprogramm verbessern
+  - Mehr Kommentare
+  - Evtl. Optimierungen
+  - Ausarbeitungen
+  - Präsentation
