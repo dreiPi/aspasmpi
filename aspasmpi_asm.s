@@ -12,22 +12,56 @@ _calc :
 	## PUSH registers and stackframe
 	PUSH {r4-r10,r11}
 	# Create new stackfrme
-	ADD r11,sp, #0x24
+	ADD r11,sp, #0x1c
 	SUB sp, sp, #20
 	# copy params
 	STR r0, [r11,#-0x8]
 	STR r1, [r11,#-0xc]
 	STR r2, [r11,#-0x10]
 	STR r3, [r11,#-0x14]
+	PUSH {lr}
+
 	LDR r0, [r11,#4]
 	STR r0, [r11,#-0x18]
-
+	## r0 := length
 	##Code:
-	##TODO
-	## Teardown
+	##Basispointer laden
+	LDR r1, [r11,#-0x8]
+	LDR r2, [r11,#-0xc]
+	LDR r3, [r11,#-0x10]
+	LDR r4, [r11,#-0x14]
+	SUB r0, r0, #1
+loop :
+	## Pointer für alles, jeweils mit Offset i<<2
+	ADD r5, r1, r0, LSL #2
+	ADD r6, r2, r0, LSL #2
+	ADD r7, r3, r0, LSL #2
+	ADD r8, r4, r0, LSL #2
 
+	FLDS s0, [r5]
+	FLDS s1, [r6]
+	FLDS s2, _E_GUMMI
+	## Kapazität berechnen
+	BL _capacity
+	FSTS s0, [r7]
+
+	FLDS s0, [r5]
+	FLDS s1, [r6]
+	FLDS s2, _E_PAPIER
+	## Kapazität berechnen
+	BL _capacity
+	FSTS s0, [r8]
+
+	## SUBS aktualisiert N Flag
+	SUBS r0, r0, #1
+	## Branch if not negative
+	BPL loop
+
+
+	## Teardown
+	POP {lr}
 	## Reset stackframe
-	SUB sp, r11, #0x24
+	SUB sp, r11, #0x1c
 	# POP registers and stackframe
 	POP {r4-r10,r11}
 	# Return
@@ -118,3 +152,8 @@ _M_PI :
 	.float 3.14159265358979323846
 _M_4 :
 	.float 4.0
+_E_GUMMI :
+	.float 3.0
+_E_PAPIER :
+	.float 5.0
+
