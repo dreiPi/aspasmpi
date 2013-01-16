@@ -4,11 +4,11 @@
 
 # This makefile is intended for use with GNU make
 
-TARGET = default
+TARGET = aspasmpi
 
 CPU = -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=hard
 
-CC_OPTS = -c -O0 -g  -marm
+CC_OPTS = -Wall -c -O0 -g -marm -std=c99
 
 OBJS = $(TARGET).o
 OBJS_ASM = $(TARGET)_asm.o
