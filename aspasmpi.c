@@ -121,8 +121,3 @@ float calc_single_c (float r1, float r2, float e_r) {
 	k1 = faktor * bruch * e_r;
 	return k1;
 }
-
-int add_5(int a, int b, int c, int d, int e) {
-	return e+d+c+b+a;
-
-}
