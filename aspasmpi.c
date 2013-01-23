@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/time.h>
-#include <sys/resource.h>
 
 #define MAX_LINE_LENGTH 1024
 
@@ -29,13 +28,14 @@ int main(int argc, char **argv) {
 	result1 = (float*)malloc(length * sizeof(float));
 	result2 = (float*)malloc(length * sizeof(float));
 
-	struct rusage start,end;
-	rusage(RUSAGE_SELF,&start);
+	struct timeval start,end;
+	gettimeofday(&start,0);
 	_calc(rad1, rad2, result1, result2, length);
-	rusage(RUSAGE_SELF,&end);
+	gettimeofday(&end,0);
 
+	double utimediff = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
 
-	printf("ARM: time needed: %f usec \n", (difftime(start.ru_utime,end.ru_utime)+difftime(start.ru_stime,end.ru_stime))*1000000.0d);
+	printf("ARM: time needed: %f usec \n", utimediff);
 
 	printf("Ergebnisse: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
@@ -44,11 +44,13 @@ int main(int argc, char **argv) {
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
 
-	rusage(RUSAGE_SELF,&start);
+	gettimeofday(&start,0);
 	calc_c(rad1, rad2, result1, result2, length);
-	rusage(RUSAGE_SELF,&end);
+	gettimeofday(&end,0);
 
-	printf("C: time needed: %f usec \n", (difftime(start.ru_utime,end.ru_utime)+difftime(start.ru_stime,end.ru_stime))*1000000.0d);
+	utimediff = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+
+	printf("C: time needed: %f usec \n", utimediff);
 
 	printf("Ergebnisse: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
