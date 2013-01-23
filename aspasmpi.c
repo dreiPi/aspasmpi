@@ -34,7 +34,8 @@ int main(int argc, char **argv) {
 	_calc(rad1, rad2, result1, result2, length);
 	rusage(RUSAGE_SELF,&end);
 
-	printf("ARM: time needed: %li usec \n", (start.ru_utime.tv_sec+start.ru_stime.tv_sec));
+
+	printf("ARM: time needed: %f usec \n", (difftime(start.ru_utime,end.ru_utime)+difftime(start.ru_stime,end.ru_stime))*1000000.0d);
 
 	printf("Ergebnisse: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
@@ -43,7 +44,11 @@ int main(int argc, char **argv) {
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
 
-	printf("C: time needed: %li usec \n", 1);
+	rusage(RUSAGE_SELF,&start);
+	calc_c(rad1, rad2, result1, result2, length);
+	rusage(RUSAGE_SELF,&end);
+
+	printf("C: time needed: %f usec \n", (difftime(start.ru_utime,end.ru_utime)+difftime(start.ru_stime,end.ru_stime))*1000000.0d);
 
 	printf("Ergebnisse: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
