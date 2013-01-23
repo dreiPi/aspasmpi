@@ -38,7 +38,7 @@ Unsere Entwicklungsumgebung besteht aus \emph{ARM Development Studio 5 für Ecli
 \section{Lösungsalternativen}
 \subsection{Unsere Lösung -- Vector Floating Point (VFP)}
 \subsubsection{Vorstellung}
-In der von uns enwickelten Lösung verwenden die Vector Floating Point Erweierung von ARM. 
+In der von uns enwickelten Lösung verwenden wir die Vector Floating Point Erweiterung von ARM. 
 Diese erlaubt es uns mit Floats und den Grundrechenarten zu rechnen.
 \subsubsection{Vorteile}
 \begin{itemize}
@@ -58,8 +58,9 @@ zu profitieren. Das bedeutet, dass pro Assemblerbefehl nicht mit einem, sondern 
 \end{itemize}
 \subsubsection{Nachteile}
 \begin{itemize}
-\item SIMD Befehle müssen jeweils 4 Floats verarbeiten
-\item Probleme, falls Menge an Floats keine Vielfaches von vier
+\item SIMD Befehle müssen jeweils vier Floats verarbeiten
+\item Der NEON Befehlssatz verfügt über keinen Divisionsbefehl. Der beste Workaround ist eine Annäherung des Kehrbruch mit \emph{VRECPE} und anschließende Multiplikation. 
+Jedoch is die Annäherung nicht sehr genau.
 \end{itemize}
 \subsection{Entscheidungsprozess}
 %% TODO Entscheidungsprozess erkären
