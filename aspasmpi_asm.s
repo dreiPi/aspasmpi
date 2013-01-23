@@ -71,10 +71,6 @@ loop :
 	SUBS r0, r0, #1
 	## Branch if not negative
 	BPL loop
-	
-	## POP VFP-Register
-	POP r9
-	FMSR s6, r9
 
 	## Teardown
 	POP {lr}
@@ -87,9 +83,9 @@ loop :
 
 .globl _capacity
 ## float capacity(float rad1, float rad2, float er)
-## s0 = rad1 -> [r11,#-0x8]
-## s1 = rad2 -> [r11,#-0xc]
-## s2 = e_r -> [r11,#-0x10]
+## s0 = rad1
+## s1 = rad2
+## s2 = e_r
 ## s3 = Konstante 4*PI*E0
 _capacity :
 	## Setup
