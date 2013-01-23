@@ -32,6 +32,8 @@ extern void _calc(float* data1, float* data2, float* result1, float* result2, in
  */
 extern float _capacity(float rad1, float rad2, float er, float _4_pi_e0);
 
+extern float* _fast_capacity(float* r1, float* r2, float* e0);
+
 // Vordeklarationen
 
 int datei_lesen(char* filename, float** rad1, float** rad2, int* length);
@@ -74,7 +76,10 @@ int main(int argc, char **argv) {
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
 
-
+	float r1[4] = {1.5,1.6,0.8,0.9};
+	float r2[4] = {1.9,2.9,1.8,4.9};
+	float es[2] = {1.9,4.0};
+	float* f = _fast_capacity(r1,r2,es);
 	// Das selbe nochmal mit der Referenzimplementierung wiederholen
 	gettimeofday(&start,0);
 	calc_c(rad1, rad2, result1, result2, length);

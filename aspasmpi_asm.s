@@ -37,7 +37,7 @@ _calc :
 	# Konstante vorberechnen
 	## s0 := PI, s3 :=
 	FLDS s0, _M_PI
-	FLDS s3, _E_0
+	FLDS s3, _M_E_0
 	## s0 := pi*e0
 	FMULS s0, s0, s3
 	## s3 := 4.0
@@ -144,8 +144,47 @@ _capacity :
 	# Return
 	BX lr
 
-_E_0 :
+# float* fast_capacity(float* r1, float* r2, float* ers)
+
+# first two e_rs are evaluated
+.globl _fast_capacity
+_fast_capacity :
+	PUSH {r11}
+	ADD r11,sp,#0x18
+	VPUSH {q0-q5}
+
+	# 2 x e_r
+	VLDM r3, {d0}
+	# 4 x r1
+	VLDM r0, {q1}
+	# 4 x r2
+	VLDM r1, {q2}
+	# r2 - r1
+	VSUB.F32 q3, q1, q2
+	# 1 / (r2 - r1)
+	VRECPE.F32 q3, q3
+	# r1 / (r2 - r1)
+	VMUL.F32 q3, q3, q1
+	# r2 * r1 / (r2 - r1)
+	VMUL.F32 q3, q3, q2
+	# e_0 * 4 * pi
+	VLDR d1, _M_4_PI
+	VMUL.F32 q3, q3, d1[0]
+	VMUL.F32 q3, q3, d1[1]
+	VLDR d1, _M_E_0
+	VMUL.F32 q3, q3, d1[0]
+	# ergebnis
+	VMUL.F32 q4, q3, d0[0]
+	VMUL.F32 q5, q3, d0[1]
+	SUB sp,r11, #0x18
+	VPOP {q0-q5}
+
+	POP {r11}
+	BX lr
+
+_M_E_0 :
 	.float 8.85418781762e-12
+	.float 0.0
 _M_PI :
 	.float 3.14159265358979323846
 _M_4 :
@@ -156,3 +195,7 @@ _E_PAPIER :
 	.float 5.0
 _E_CONST :
 	.float 1.112650056053569442110823386467834993628329236e-10
+_M_4_PI :
+	.float 3.14159265358979323846
+	.float 4.0
+
