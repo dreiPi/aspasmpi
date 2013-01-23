@@ -3,7 +3,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Ersetzen Sie in den folgenden Zeilen die entsprechenden -Texte-
 %% mit den richtigen Werten.
-\newcommand{\theNumber}{$\pi$}
+\newcommand{\theNumber}{1.77}
+\newcommand{\theGroup}{$\pi$}
 \newcommand{\theName}{Kugelkondensator mit Dielektrika Hartgummi und Hartpapier}
 
 \newcommand{\nameM}{Moritz Mackiewicz}
@@ -17,7 +18,7 @@
 
 \begin{document}
 
-\sheetHeader{Projektaufgabe Gruppe \theNumber : \theName}{\nameM}{\nameE}{\nameC}
+\sheetHeader{Projektaufgabe \theNumber : \theName}{Gruppe \theGroup}{\nameM}{\nameE}{\nameC}
 
 
 \section{Problemstellung und Spezifikation}
@@ -37,7 +38,7 @@ Unsere Entwicklungsumgebung besteht aus \emph{ARM Development Studio 5 für Ecli
 \section{Lösungsalternativen}
 \subsection{Unsere Lösung -- Vector Floating Point (VFP)}
 \subsubsection{Vorstellung}
-In der von uns enwickelten Lösung verwenden die Vector Floating Point Erweierung von ARM. 
+In der von uns enwickelten Lösung verwenden wir die Vector Floating Point Erweiterung von ARM. 
 Diese erlaubt es uns mit Floats und den Grundrechenarten zu rechnen.
 \subsubsection{Vorteile}
 \begin{itemize}
@@ -57,23 +58,24 @@ zu profitieren. Das bedeutet, dass pro Assemblerbefehl nicht mit einem, sondern 
 \end{itemize}
 \subsubsection{Nachteile}
 \begin{itemize}
-\item SIMD Befehle müssen jeweils 4 Floats verarbeiten
-\item Probleme, falls Menge an Floats keine Vielfaches von vier
+\item SIMD Befehle müssen jeweils vier Floats verarbeiten
+\item Der NEON Befehlssatz verfügt über keinen Divisionsbefehl. Der beste Workaround ist eine Annäherung des Kehrbruch mit \emph{VRECPE} und anschließende Multiplikation. 
+Jedoch is die Annäherung nicht sehr genau.
 \end{itemize}
 \subsection{Entscheidungsprozess}
 %% TODO Entscheidungsprozess erkären
 \section{Dokumentation der Implementierung}
-\subsection Entwickler-Dokumentation
-\subsubsection Rahmenprogramm
-\subsubsection Assembleroutine
-\subsubsection Optimierungen
-\subsection Benutzer-Dokumentation
+\subsection{Entwickler-Dokumentation}
+\subsubsection{Rahmenprogramm}
+\subsubsection{Assembleroutine}
+\subsubsection{Optimierungen}
+\subsection{Benutzer-Dokumentation}
 
 \section{Ergebnisse}
-\subsection Vergleich von Assembler und C-Code
-\subsubsection Genauigkeit der Ergebnisse
-\subsubsection Laufzeit
-\subsection Analyse und Bewertung
+\subsection{Vergleich von Assembler und C-Code}
+\subsubsection{Genauigkeit der Ergebnisse}
+\subsubsection{Laufzeit}
+\subsection{Analyse und Bewertung}
 
 
 
