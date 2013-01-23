@@ -34,33 +34,39 @@ extern float _capacity(float rad1, float rad2, float er, float _4_pi_e0);
 
 // Vordeklarationen
 
-int read_file(char* filename, float** rad1, float** rad2, int* length);
+int datei_lesen(char* filename, float** rad1, float** rad2, int* length);
 
 float capacity_c (float r1, float r2, float e_r);
 void calc_c(float* data1, float* data2, float* result1, float* result2, int length);
 
 // Hauptprogramm
 int main(int argc, char **argv) {
-
+	// Pointer für unsere Arrays freimachen
 	float *rad1, *rad2, *result1, *result2;
 	int length;
-	int erfolg = read_file("ui.txt", &rad1, &rad2, &length);
+	// Datei einlesen
+	int erfolg = datei_lesen("ui.txt", &rad1, &rad2, &length);
 	if(erfolg != 0) {
 		return erfolg;
 	}
+	// Speicher allokieren
 	result1 = (float*)malloc(length * sizeof(float));
 	result2 = (float*)malloc(length * sizeof(float));
 
 	assert((result1!=NULL&&result2!=NULL));
+	// Zeitmessung
 	struct timeval start,end;
 	gettimeofday(&start,0);
+	// Assemblermethode aufrufen
 	_calc(rad1, rad2, result1, result2, length);
 	gettimeofday(&end,0);
 
+	// Zeitberechnung
 	double utimediff = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
 
 	printf("ARM: time needed: %f usec \n", utimediff);
 
+	// das erste, mittlere und letzte Ergebnis ausgeben
 	printf("Ergebnisse der Assemblerimplementierung: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
 	for(int i=0; i<length; i+=length/3) {
@@ -68,6 +74,8 @@ int main(int argc, char **argv) {
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
 
+
+	// Das selbe nochmal mit der Referenzimplementierung wiederholen
 	gettimeofday(&start,0);
 	calc_c(rad1, rad2, result1, result2, length);
 	gettimeofday(&end,0);
@@ -98,7 +106,7 @@ int main(int argc, char **argv) {
  * @param length ein Pointer auf eine float-Variable, dort wird die Länge der beiden Arrays gespeichert.
  * @return 0, wenn erfolgreich, 1 im Fehlerfall
  */
-int read_file(char* filename, float** rad1, float** rad2, int* length) {
+int datei_lesen(char* filename, float** rad1, float** rad2, int* length) {
 	// hier kommt unser Handle rein
 	FILE* handle = NULL;
 	char line[MAX_LINE_LENGTH];
