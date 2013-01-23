@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <assert.h>
 
 #define MAX_LINE_LENGTH 1024
 
@@ -50,6 +51,7 @@ int main(int argc, char **argv) {
 	result1 = (float*)malloc(length * sizeof(float));
 	result2 = (float*)malloc(length * sizeof(float));
 
+	assert((result1!=NULL&&result2!=NULL));
 	struct timeval start,end;
 	gettimeofday(&start,0);
 	_calc(rad1, rad2, result1, result2, length);
@@ -61,7 +63,7 @@ int main(int argc, char **argv) {
 
 	printf("Ergebnisse der Assemblerimplementierung: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
-	for(int i=0; i<length; i++) {
+	for(int i=0; i<length; i+=length/3) {
 		printf("%8d: %1.8e %1.8e %1.8e %1.8e\n", i,
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
@@ -76,7 +78,7 @@ int main(int argc, char **argv) {
 
 	printf("Ergebnisse der Referenzimplementierung: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
-	for(int i=0; i<length; i++) {
+	for(int i=0; i<length; i+=length/3) {
 		printf("%8d: %1.8e %1.8e %1.8e %1.8e\n", i,
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
