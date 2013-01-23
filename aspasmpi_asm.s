@@ -6,77 +6,92 @@
 ## r3 = result2 -> [r11,#-0x14]
 ## stack = length -> r0
 _calc :
-	## Setup
-	## PUSH registers and stackframe
+	# Stackframe Einrichten
+	# Register und Stackframe PUSHen
 	PUSH {r4-r10,r11}
 	
-	# Create new stackfrme
+	# neuen Stackframe erstellen
 	ADD r11,sp, #0x1c
 	SUB sp, sp, #20
-	# copy params
+	# Parameter kopieren
 	STR r0, [r11,#-0x8]
 	STR r1, [r11,#-0xc]
 	STR r2, [r11,#-0x10]
 	STR r3, [r11,#-0x14]
+	# Link Register speichern
 	PUSH {lr}
-	 	
+
+	# Länge aus dem Stack laden und im Stackframe speichern
 	LDR r0, [r11,#4]
 	STR r0, [r11,#-0x18]
 	## r0 := length
-	##Code:
 	
-	##Basispointer laden
+	# Hier fängt die eigentliche Methode an
+
+	# Pointer für Arrays holen
 	LDR r1, [r11,#-0x8]
 	LDR r2, [r11,#-0xc]
 	LDR r3, [r11,#-0x10]
 	LDR r4, [r11,#-0x14]
-	
-	##Konstante berechnen
+
+	# Konstante vorberechnen
+	## s0 := PI, s3 :=
 	FLDS s0, _M_PI
-	FLDS s1, _E_0	
+	FLDS s3, _E_0
 	## s0 := pi*e0
-	FMULS s0, s0, s1
-	## float 4.0
-	FLDS s1, _M_4
+	FMULS s0, s0, s3
+	## s3 := 4.0
+	FLDS s3, _M_4
 	## s3 := 4*pi*e0
-	FMULS s3, s0, s1
+	FMULS s3, s0, s3
 	
-	##Zählvariable - 1
+	# Wir fangen bei Länge-1 an und zählen dann herunter bis r0==0
 	SUB r0, r0, #1
 loop :
-	## Pointer für alles, jeweils mit Offset i<<2
+	# Pointer für den Datensatz und die Ergebnisse berechnen
+	# jeweils mit Offset r0 und LSL #2, da ein float 4 Bytes sind
 	ADD r5, r1, r0, LSL #2
 	ADD r6, r2, r0, LSL #2
 	ADD r7, r3, r0, LSL #2
 	ADD r8, r4, r0, LSL #2
 
+	# Datensatz lesen
 	FLDS s0, [r5]
 	FLDS s1, [r6]
+	# Dielekrizität für Hartgummi laden
 	FLDS s2, _E_GUMMI
-	
-	## Kapazität berechnen
+
+	# Kapazität berechnen
 	BL _capacity
+	# Ergebnis speichern
 	FSTS s0, [r7]
 
+	# Datensatz wieder einlesen
 	FLDS s0, [r5]
 	FLDS s1, [r6]
+	# Dielekrizität für Hartpapier laden
 	FLDS s2, _E_PAPIER
-	## Kapazität berechnen
+
+	# Kapazität berechnen
 	BL _capacity
+	# Ergebnis speichern
 	FSTS s0, [r8]
 
-	## SUBS aktualisiert N Flag
+	# Zählvariable Dekrementieren
+	# SUB mit S aktualisiert N Flag, wodurch ein Über/Unterlauf angezeigt wird
 	SUBS r0, r0, #1
-	## Branch if not negative
+	# Falls r0 >= 0, also kein Überlauf, mache weiter
 	BPL loop
 
-	## Teardown
+	# Aufräumen
+
+	# Gespeichertes Link Register holen
 	POP {lr}
-	## Reset stackframe
+	# Stackframe zerstören
 	SUB sp, r11, #0x1c
-	# POP registers and stackframe
+	# Register und Stackframe POPpen
 	POP {r4-r10,r11}
-	# Return
+	# Fertig.
 	BX lr
 
 .globl _capacity
