@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/time.h>
-#include <sys/resource.h>
 
 #define MAX_LINE_LENGTH 1024
 
@@ -11,13 +10,35 @@
 #define E_GUMMI		3.0
 #define E_PAPIER	5.0
 
+/**
+ * Führt die Berechnung der Kapazitäten aller angegebener Datensätze an.
+ * Verwendet dazu die Methode _capacity().
+ * @param data1 ein Array, in dem die inneren Radien gespeichert sind
+ * @param data2 ein Array, in dem die äußeren Radien gespeichert sind
+ * @param result1 in diesem Array werden die Ergebnisse für Hartgummi gespeichert
+ * @param result2 in diesem Array werden die Ergebnisse für Hartpapier gespeichert
+ * @param length die Länge aller Arrays
+ */
 extern void _calc(float* data1, float* data2, float* result1, float* result2, int length);
-extern float _capacity(float rad1, float rad2, float er);
+
+/**
+ * Berechnet einen einzigen Wert
+ * @param r1 innerer Radius
+ * @param r2 äußerer Radius
+ * @param e_r Dielektrizität für das verwendete Material
+ * @param _4_pi_e0 eine vorgegebene Konstante, 4*pi*e0
+ * @return die Kapazität des Kugelkondensators
+ */
+extern float _capacity(float rad1, float rad2, float er, float _4_pi_e0);
+
+// Vordeklarationen
 
 int read_file(char* filename, float** rad1, float** rad2, int* length);
-float calc_single_c (float r1, float r2, float e_r);
+
+float capacity_c (float r1, float r2, float e_r);
 void calc_c(float* data1, float* data2, float* result1, float* result2, int length);
 
+// Hauptprogramm
 int main(int argc, char **argv) {
 
 	float *rad1, *rad2, *result1, *result2;
@@ -29,32 +50,36 @@ int main(int argc, char **argv) {
 	result1 = (float*)malloc(length * sizeof(float));
 	result2 = (float*)malloc(length * sizeof(float));
 
-	//struct rusage start,end;
-	//rusage(RUSAGE_SELF,&start);
+	struct timeval start,end;
+	gettimeofday(&start,0);
 	_calc(rad1, rad2, result1, result2, length);
-	//rusage(RUSAGE_SELF,&end);
-	//printf("ARM: time needed: %f usec \n", (difftime(start.ru_utime,end.ru_utime)+difftime(start.ru_stime,end.ru_stime))*1000000.0d);
+	gettimeofday(&end,0);
 
-	printf("Ergebnisse: \n");
+	double utimediff = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+
+	printf("ARM: time needed: %f usec \n", utimediff);
+
+	printf("Ergebnisse der Assemblerimplementierung: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
 	for(int i=0; i<length; i++) {
 		printf("%8d: %1.8e %1.8e %1.8e %1.8e\n", i,
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
 
-	//rusage(RUSAGE_SELF,&start);
+	gettimeofday(&start,0);
 	calc_c(rad1, rad2, result1, result2, length);
-	//rusage(RUSAGE_SELF,&end);
-	//printf("C: time needed: %f usec \n", (difftime(start.ru_utime,end.ru_utime)+difftime(start.ru_stime,end.ru_stime))*1000000.0d);
+	gettimeofday(&end,0);
 
-	printf("Ergebnisse: \n");
+	utimediff = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+
+	printf("C: time needed: %f usec \n", utimediff);
+
+	printf("Ergebnisse der Referenzimplementierung: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
 	for(int i=0; i<length; i++) {
 		printf("%8d: %1.8e %1.8e %1.8e %1.8e\n", i,
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
-
-
 
 	return 0;
 }
@@ -133,6 +158,8 @@ int read_file(char* filename, float** rad1, float** rad2, int* length) {
 
 /**
  * Referenzimplementierung des Assemblercodes in C.
+ * Führt die Berechnung der Kapazitäten aller angegebener Datensätze an.
+ * Verwendet dazu die Methode capacity_c().
  * @param data1 ein Array, in dem die inneren Radien gespeichert sind
  * @param data2 ein Array, in dem die äußeren Radien gespeichert sind
  * @param result1 in diesem Array werden die Ergebnisse für Hartgummi gespeichert
@@ -154,13 +181,14 @@ void calc_c (float* data1, float* data2, float* result1, float* result2, int len
 }
 
 /**
+ * Referenzimplementierung des Assemblerodes in C.
  * Berechnet einen einzigen Wert
  * @param r1 innerer Radius
  * @param r2 äußerer Radius
  * @param e_r Dielektrizität für das verwendete Material
  * @return die Kapazität des Kugelkondensators
  */
-float calc_single_c (float r1, float r2, float e_r) {
+float capacity_c (float r1, float r2, float e_r) {
 	float faktor, bruch, k1;
 	faktor = 4 * M_PI * E_0;
 	bruch = (r2 * r1) / (r2 - r1);
