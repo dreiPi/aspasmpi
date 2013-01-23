@@ -4,9 +4,7 @@
 ## r1 = data2 -> [r11,#-0xc]
 ## r2 = result1 -> [r11,#-0x10]
 ## r3 = result2 -> [r11,#-0x14]
-## stack length -> [r11,#-0x18]
-## e1*pi -> r9
-## e2*pi -> r10
+## stack = length -> r0
 _calc :
 	## Setup
 	## PUSH registers and stackframe
@@ -82,7 +80,7 @@ loop :
 	BX lr
 
 .globl _capacity
-## float capacity(float rad1, float rad2, float er)
+## float capacity(float rad1, float rad2, float er, float _4_pi_e0)
 ## s0 = rad1
 ## s1 = rad2
 ## s2 = e_r
