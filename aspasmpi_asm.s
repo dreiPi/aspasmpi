@@ -112,7 +112,7 @@ _capacity :
 	FMULS s4, s4, s1
 	
 	## s0 := 4*pi*e0*er
-	FMULS s0, s6, s2
+	FMULS s0, s3, s2
 
 	## Kapazität berechnen (Bruch * Konstante)
 	FMULS s0, s0, s4
@@ -141,3 +141,5 @@ _E_GUMMI :
 	.float 3.0
 _E_PAPIER :
 	.float 5.0
+_E_CONST :
+	.float 1.112650056053569442110823386467834993628329236e-10
