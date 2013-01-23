@@ -29,13 +29,11 @@ int main(int argc, char **argv) {
 	result1 = (float*)malloc(length * sizeof(float));
 	result2 = (float*)malloc(length * sizeof(float));
 
-	struct rusage start,end;
-	rusage(RUSAGE_SELF,&start);
+	//struct rusage start,end;
+	//rusage(RUSAGE_SELF,&start);
 	_calc(rad1, rad2, result1, result2, length);
-	rusage(RUSAGE_SELF,&end);
-
-
-	printf("ARM: time needed: %f usec \n", (difftime(start.ru_utime,end.ru_utime)+difftime(start.ru_stime,end.ru_stime))*1000000.0d);
+	//rusage(RUSAGE_SELF,&end);
+	//printf("ARM: time needed: %f usec \n", (difftime(start.ru_utime,end.ru_utime)+difftime(start.ru_stime,end.ru_stime))*1000000.0d);
 
 	printf("Ergebnisse: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
@@ -44,11 +42,10 @@ int main(int argc, char **argv) {
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
 
-	rusage(RUSAGE_SELF,&start);
+	//rusage(RUSAGE_SELF,&start);
 	calc_c(rad1, rad2, result1, result2, length);
-	rusage(RUSAGE_SELF,&end);
-
-	printf("C: time needed: %f usec \n", (difftime(start.ru_utime,end.ru_utime)+difftime(start.ru_stime,end.ru_stime))*1000000.0d);
+	//rusage(RUSAGE_SELF,&end);
+	//printf("C: time needed: %f usec \n", (difftime(start.ru_utime,end.ru_utime)+difftime(start.ru_stime,end.ru_stime))*1000000.0d);
 
 	printf("Ergebnisse: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
@@ -62,30 +59,41 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
+
+/**
+ * Lies die angegebene Datei ein, die erste Zeile soll die Anzahl der Datensätze enthalten,
+ * Alle weiteren Zeilen sind im Format '## mm ## mm',
+ * wobei ## jeweils eine Fließkommazahl mit Punkt als Dezimaltrennzeichen ist.
+ * @param filename der Pfad zur Datei
+ * @param rad1 ein Pointer auf einen float-Pointer,
+ * in diesem wird ein Array für die inneren Radien gespeichert
+ * @param rad2 wie rad1, aber für die äußeren Radien
+ * @param length ein Pointer auf eine float-Variable, dort wird die Länge der beiden Arrays gespeichert.
+ * @return 0, wenn erfolgreich, 1 im Fehlerfall
+ */
 int read_file(char* filename, float** rad1, float** rad2, int* length) {
+	// hier kommt unser Handle rein
 	FILE* handle = NULL;
 	char line[MAX_LINE_LENGTH];
 
+	// Datei öffnen
 	handle = fopen(filename, "r");
 	if(!handle) {
 		fprintf(stderr,"FEHLER: Datei konnte nicht geoeffnet werden!\n");
 		return 1;
 	}
-	//erste zeile einlesen
-	if(feof(handle)) {
+	// erste Zeile einlesen
+	if(feof(handle) || fgets(line, MAX_LINE_LENGTH, handle)==NULL) {
 		fprintf(stderr,"Fehler: Datei ist leer\n");
 		return 1;
 	}
-	if(fgets(line, MAX_LINE_LENGTH, handle)==NULL) {
-		fprintf(stderr,"Fehler: Datei ist leer\n");
-		return 1;
-	}
+	// die Zahl in der ersten Zeile ist die Anzahl der Datensätze
 	*length = atoi(line);
 	if(*length <= 0) {
 		fprintf(stderr, "Fehler: '%s' ist keine sinnvolle Zeilennummer\n", line);
 		return 1;
 	}
-	//allokiere speicher
+	// Speicherallokation
 	*rad1 = (float*)malloc(*length * sizeof(float));
 	*rad2 = (float*)malloc(*length * sizeof(float));
 	if(!rad1 || !rad2) {
@@ -93,30 +101,44 @@ int read_file(char* filename, float** rad1, float** rad2, int* length) {
 		return 1;
 	}
 
-	//werte lesen
+	// Werte lesen
 	int index = 0;
 	while(!feof(handle)) {
-
+		// solange wir nicht am Ende der Datei sind und fgets() etwas einlesen kann
 		if(fgets(line, MAX_LINE_LENGTH, handle) == NULL) break;
+		// parse die zwei Werte
 		if(sscanf(line, "%f mm %f mm",
+				// hier werden die Pointer berechnet, in denen dann die Werte gespeichert werden
 				(*rad1+index), (*rad2+index) ) != 2) {
+			// es wurden nicht genau 2 Zahlen gefunden, Schiff verlassen!
 			fprintf(stderr, "Fehler in Z. %d: %s\n", index, line);
 			fprintf(stderr, "Ich bin mal weg\n");
 			return 1;
 		}
 		index++;
 		if(index > *length) {
-			fprintf(stderr,"Fehler: zu viele Werte, letzter wert: %s\n",line);
+			// Es wurden zu viele Werte eingelesen, wir ignorieren den rest und fahren fort.
+			fprintf(stderr,"Fehler: zu viele Werte, letzter Wert: %s\n",line);
 			break;
 		}
 	}
 	if(index != *length) {
+		// Es wurden zu wenige Werte eingelesen, wir ändern die Länge und fahren fort.
+		// Den überschüssigen Speicher ignorieren wir.
 		fprintf(stderr,"Fehler: zu wenige Werte\n");
 		*length = index;
 	}
 	return 0;
 }
 
+/**
+ * Referenzimplementierung des Assemblercodes in C.
+ * @param data1 ein Array, in dem die inneren Radien gespeichert sind
+ * @param data2 ein Array, in dem die äußeren Radien gespeichert sind
+ * @param result1 in diesem Array werden die Ergebnisse für Hartgummi gespeichert
+ * @param result2 in diesem Array werden die Ergebnisse für Hartpapier gespeichert
+ * @param length die Länge aller Arrays
+ */
 void calc_c (float* data1, float* data2, float* result1, float* result2, int length) {
 	float r1, r2, faktor,bruch, k1, k2;
 	for(int i = 0; i < length; i++) {
@@ -131,6 +153,13 @@ void calc_c (float* data1, float* data2, float* result1, float* result2, int len
 	}
 }
 
+/**
+ * Berechnet einen einzigen Wert
+ * @param r1 innerer Radius
+ * @param r2 äußerer Radius
+ * @param e_r Dielektrizität für das verwendete Material
+ * @return die Kapazität des Kugelkondensators
+ */
 float calc_single_c (float r1, float r2, float e_r) {
 	float faktor, bruch, k1;
 	faktor = 4 * M_PI * E_0;
