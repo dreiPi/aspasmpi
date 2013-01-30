@@ -15,20 +15,29 @@
 \input{asp_standard_lib}
 %\include{__config}
 \usepackage{hyperref}
+\usepackage{amsmath}
 
 \begin{document}
 
 \sheetHeader{Projektaufgabe \theNumber : \theName}{Gruppe \theGroup}{\nameM}{\nameE}{\nameC}
 
-
 \section{Problemstellung und Spezifikation}
 
 \subsection{Aufgabenstellung}
-In der von uns bearbeiteten Aufgabe geht es um die Berechnung der Kapazität eines Kugelkondensators.
-
+In der von uns bearbeiteten Aufgabe geht es um die Berechnung der Kapazitäten von mehreren Kugelkondensatoren.
 Dazu wird eine Liste von Kondensatorabmessungen in Form einer Textdatei eingegeben. Zu dieser dann in einem Assemblerprogramm die jeweiligen Kapazitäten für verschiedene Dielektrika berechnet werden.
 Die Abmessungen bestehen jeweils aus zwei Radien, dem der inneren Kugel $r_{1}$ und dem der äußeren Kugel $r_{2}$.
-%% TODO Bild von Kugelkondensator einfügen
+
+Die Formel zur Berechnung der Kapazität eines Kugelkondesators lautet:
+
+\begin{center}
+\begin{math}
+C= 4 \pi E \frac{R2*R1} {R2 - R1}
+\end{math}
+\end{center}
+
+Diese Formel lässt sich für die Berechnung mit Assembler vereinfachen, indem man sie in einzelne Schritte aufteilt und diese jeweils nacheinander ausrechnet.
+
 
 \subsection{Implementierungsumgebung}
 Wir verwenden zur Entwicklung das \board, ein ARMv8-System mit NEON-VFP. Dieses erlaubt bla, bla und bla %%TODO
@@ -37,19 +46,18 @@ Unsere Entwicklungsumgebung besteht aus \emph{ARM Development Studio 5 für Ecli
 
 \section{Lösungsalternativen}
 \subsection{Unsere Lösung -- Vector Floating Point (VFP)}
-\subsubsection{Vorstellung}
+\subsection*{Vorstellung}
 In der von uns enwickelten Lösung verwenden wir die Vector Floating Point Erweiterung von ARM. 
 Diese erlaubt es uns mit Floats und den Grundrechenarten zu rechnen.
-\subsubsection{Vorteile}
+\subsection*{Vorteile}
 \begin{itemize}
 \item beliebige Menge an zu verarbeitenden Daten
 \end{itemize}
-\subsubsection{Nachteile}
+\subsection*{Nachteile}
 \begin{itemize}
 \item langsamer als SIMD
 \end{itemize}
 \subsection{Alternative Lösung -- SIMD (NEON)}
-\subsubsection{Vorstellung}
 In dieser alternativen Lösung wird der NEON Koprozessor von ARM verwendet, um von SIMD (Single Instruction Multiple Data)
 zu profitieren. Das bedeutet, dass pro Assemblerbefehl nicht mit einem, sondern mit vier Floats gerechnet werden. Dadurch würde das Programm schneller werden.
 \subsubsection{Vorteile}
@@ -58,7 +66,7 @@ zu profitieren. Das bedeutet, dass pro Assemblerbefehl nicht mit einem, sondern 
 \end{itemize}
 \subsubsection{Nachteile}
 \begin{itemize}
-\item SIMD Befehle müssen jeweils vier Floats verarbeiten
+\item SIMD Befehle müssen jeweils vier Floats(ein Quad-Word) verarbeiten
 \item Der NEON Befehlssatz verfügt über keinen Divisionsbefehl. Der beste Workaround ist eine Annäherung des Kehrbruch mit \emph{VRECPE} und anschließende Multiplikation. 
 Jedoch is die Annäherung nicht sehr genau.
 \end{itemize}
