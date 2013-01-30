@@ -141,23 +141,24 @@ _capacity :
 	# Weiter
 	BX lr
 
-# float* fast_capacity(float* r1, float* r2, float* ers)
+# float* fast_capacity(float* r1, float* r2, float* ers, float* res1, float* res2)
 
 # first two e_rs are evaluated
 .globl _fast_capacity
 _fast_capacity :
 	PUSH {r11}
-	ADD r11,sp,#0x18
+	ADD r11,sp,#0x0
+	# 6 register * sizeof(float) * quad
 	VPUSH {q0-q5}
 
 	# 2 x e_r
-	VLDM r3, {d0}
+	VLDM r2, {d0}
 	# 4 x r1
 	VLDM r0, {q1}
 	# 4 x r2
 	VLDM r1, {q2}
 	# r2 - r1
-	VSUB.F32 q3, q1, q2
+	VSUB.F32 q3, q2, q1
 	# 1 / (r2 - r1)
 	VRECPE.F32 q3, q3
 	# r1 / (r2 - r1)
@@ -173,9 +174,14 @@ _fast_capacity :
 	# ergebnis
 	VMUL.F32 q4, q3, d0[0]
 	VMUL.F32 q5, q3, d0[1]
-	SUB sp,r11, #0x18
-	VPOP {q0-q5}
 
+	VSTM r3, {q4}
+	LDR r0, [r11,#0x4]
+	VSTM r0, {q5}
+
+
+	VPOP {q0-q5}
+	SUB sp,r11, #0x0
 	POP {r11}
 	BX lr
 

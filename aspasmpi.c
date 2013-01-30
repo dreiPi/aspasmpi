@@ -32,7 +32,7 @@ extern void _calc(float* data1, float* data2, float* result1, float* result2, in
  */
 extern float _capacity(float rad1, float rad2, float er, float _4_pi_e0);
 
-extern float* _fast_capacity(float* r1, float* r2, float* e0);
+extern void _fast_capacity(float* r1, float* r2, float* e0, float* res1, float* res2);
 
 // Vordeklarationen
 
@@ -71,15 +71,27 @@ int main(int argc, char **argv) {
 	// das erste, mittlere und letzte Ergebnis ausgeben
 	printf("Ergebnisse der Assemblerimplementierung: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
-	for(int i=0; i<length; i+=length/3) {
+	for(int i=0; i<length; i+=length/4) {
 		printf("%8d: %1.8e %1.8e %1.8e %1.8e\n", i,
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
 
-	float r1[4] = {1.5,1.6,0.8,0.9};
-	float r2[4] = {1.9,2.9,1.8,4.9};
-	float es[2] = {1.9,4.0};
-	float* f = _fast_capacity(r1,r2,es);
+	gettimeofday(&start,0);
+	float er[2] = {E_GUMMI,E_PAPIER};
+	for(int i=0;i<length-4;i+=4) {
+		_fast_capacity(rad1+i, rad2+i, er, result1+i, result2+i);
+	}
+	gettimeofday(&end,0);
+	utimediff = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+	printf("NEON: time needed: %f usec \n", utimediff);
+	// das erste, mittlere und letzte Ergebnis ausgeben
+	printf("Ergebnisse der NEON-Implementierung: \n");
+	printf("index     r1             r2             k_gummi        k_papier\n");
+	for(int i=0; i<length; i+=length/4) {
+		printf("%8d: %1.8e %1.8e %1.8e %1.8e\n", i,
+				rad1[i],rad2[i],result1[i],result2[i]);
+	}
+
 	// Das selbe nochmal mit der Referenzimplementierung wiederholen
 	gettimeofday(&start,0);
 	calc_c(rad1, rad2, result1, result2, length);
