@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 	// das erste, mittlere und letzte Ergebnis ausgeben
 	printf("Ergebnisse der Assemblerimplementierung: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
-	for(int i=0; i<length; i+=length/4) {
+	for(int i=0; i<length; i+=length/3) {
 		printf("%8d: %1.8e %1.8e %1.8e %1.8e\n", i,
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 	// das erste, mittlere und letzte Ergebnis ausgeben
 	printf("Ergebnisse der NEON-Implementierung: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
-	for(int i=0; i<length; i+=length/4) {
+	for(int i=0; i<length; i+=length/3) {
 		printf("%8d: %1.8e %1.8e %1.8e %1.8e\n", i,
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
