@@ -158,9 +158,23 @@ _fast_capacity :
 	# 4 x r2
 	VLDM r1, {q2}
 	# r2 - r1
-	VSUB.F32 q3, q2, q1
+	VSUB.F32 q4, q2, q1
 	# 1 / (r2 - r1)
-	VRECPE.F32 q3, q3
+	VRECPE.F32 q3, q4
+	# q3 = x0
+	# q4 = d
+
+	# mehr genauigkeit
+	# q4 := 2 - x*d
+	VRECPS.F32 q5, q3, q4
+	# q4 := x0 * (2-x*d)
+	VMUL.F32 q3, q5, q3
+
+	# dasselbe nochmal
+	VRECPS.F32 q5, q3, q4
+	VMUL.F32 q3, q5, q3
+	# q3 := xn
+
 	# r1 / (r2 - r1)
 	VMUL.F32 q3, q3, q1
 	# r2 * r1 / (r2 - r1)
