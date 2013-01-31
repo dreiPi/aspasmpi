@@ -1,10 +1,17 @@
-.globl _calc
 # void calc(float* data1, float* data2, float* result1, float* result2, int length)
+# Berechnung der Kapazitäten von Kugelkondensatoren mit jeweils den Dielektrizitätswerten von Hart(gummi|papier)
+# data1: innerer Radius der Kondensatoren
+# data2: äußerer Radius der Kondensatoren
+# result1: Ergebnisse der Berechnung mit Hartgummi
+# result2: Ergebnisse der Berechnung mit Hartpapier
+# length: Anzahl der zu berechnenden Kapazitäten/Lände des Datensatzes
+
 # r0 = data1 -> [r11,#-0x8]
 # r1 = data2 -> [r11,#-0xc]
 # r2 = result1 -> [r11,#-0x10]
 # r3 = result2 -> [r11,#-0x14]
 # stack = length -> r0
+.globl _calc
 _calc :
 	# Stackframe Einrichten
 	# Register und Stackframe PUSHen
@@ -22,9 +29,9 @@ _calc :
 	PUSH {lr}
 
 	# Länge aus dem Stack laden und im Stackframe speichern
+	# r0 := length
 	LDR r0, [r11,#4]
 	STR r0, [r11,#-0x18]
-	# r0 := length
 	
 	# Hier fängt die eigentliche Methode an
 	# Pointer für Arrays holen
@@ -34,6 +41,7 @@ _calc :
 	LDR r4, [r11,#-0x14]
 
 	# Konstante 4*PI*E0 vorberechnen
+	# TODO: Multiplikation mit Dielektrizitätswerten kann auch vorberechnet werden
 	# Konstanten laden: s0 := PI, s3 := E0
 	FLDS s0, _M_PI
 	FLDS s3, _M_E_0
@@ -75,11 +83,12 @@ loop :
 	BL _capacity
 	# Ergebnis speichern
 	FSTS s0, [r8]
+	
 
 	# Zählvariable dekrementieren
 	SUBS r0, r0, #1
 	# SUB mit S aktualisiert N Flag, wodurch ein Über/Unterlauf angezeigt wird
-	# Falls r0 >= 0, also kein Überlauf, mache weiter
+	# Falls r0 >= 0, also kein Überlauf, mache weiter (springe zurück an Schleifenanfang)
 	BPL loop
 
 	# Aufräumen
@@ -89,15 +98,19 @@ loop :
 	SUB sp, r11, #0x1c
 	# Register und Stackframe POPpen
 	POP {r4-r10,r11}
-	# Fertig.
+	# Fertig (Rücksprung an Aufrufer)
 	BX lr
 
-.globl _capacity
 # float capacity(float rad1, float rad2, float er, float _4_pi_e0)
-# s0 = rad1
-# s1 = rad2
-# s2 = er
-# s3 = _4_pi_e
+
+# Berechnung der Kapzität eines Kugelkondensators 
+# rad1: innerer Radius des Kugelkondensators 
+# rad2: äußerer Radius des Kugelkondensators
+# er: Dielektrizitätswert
+# _4_pi_e0: konstanter Teil 4.0 * pi * e_0
+# -> Ergebnis ist in Register s0
+
+.globl _capacity
 _capacity :
 	# Setup
 	# Register und Strackframe pushen
@@ -136,69 +149,120 @@ _capacity :
 	# Teardown
 	# Reset stackframe
 	SUB sp, r11, #0xc
-	# Register und Stackframe popen
+	# Register und Stackframe POPpen
 	POP {r5-r7,r11}
-	# Weiter
+	# Rücksprung an Ausfrufer
 	BX lr
 
-# float* fast_capacity(float* r1, float* r2, float* ers, float* res1, float* res2)
+# void fast_capacity(float* r1, float* r2, float* ers, float* res1, float* res2)
 
-# first two e_rs are evaluated
+# Benutzt NEON-Befehle zum gleichzeitigen Berechnen der Kapazität von 4 Kugelkondensatoren mit jeweils 2 Dielektrizitätswerten
+# r1: 4 x innerer Radius der Kugelkondensatoren
+# r2: 4 x äußerer Radius der Kugelkondensatoren
+# ers: 2 x Dielektrizitätswert
+# res1: Ergebnisse mit Dielektrizitätswert 1
+# res2: Ergebnisse mit Dielektrizitätswert 2
+
 .globl _fast_capacity
 _fast_capacity :
+	# Stackframe sichern
 	PUSH {r11}
 	ADD r11,sp,#0x0
-	# 6 register * sizeof(float) * quad
+	
+	# Vorherige Registerwerte sichern
 	VPUSH {q0-q5}
 
-	# 2 x e_r
+	# d0 := 2 Dielektrizitätswerte laden
 	VLDM r2, {d0}
-	# 4 x r1
+	# q1 := 4 rad1 laden
 	VLDM r0, {q1}
-	# 4 x r2
+	# q2 := 4 rad2 laden
 	VLDM r1, {q2}
-	# r2 - r1
+	
+	# Berechnung der Kapazität
+	
+	# q4 := rad2 - rad1
 	VSUB.F32 q4, q2, q1
-	# 1 / (r2 - r1)
+	
+	# Kehrbruchapproximation, da NEON keine Division unterstützt
+	# q3 := 1 / (rad2 - rad1)
+	# Newton-Raphson-Iteration (Approximation von 1/d)
+	# x_n+1 = x_n * (2 - x_n * d)
+	
+	# Erster Iterationsschritt
+	# q3 := x_0
+	# q4 := d
 	VRECPE.F32 q3, q4
-	# q3 = x0
-	# q4 = d
 
-	# mehr genauigkeit
-	# q4 := 2 - x*d
+	# Zweiter Iterationsschritt
+	# q5 := 2 - x_0 * d
 	VRECPS.F32 q5, q3, q4
-	# q4 := x0 * (2-x*d)
+	
+	# q3 := x_1 = x_0 * (2 - x_0 * d)
 	VMUL.F32 q3, q5, q3
 
-	# dasselbe nochmal
+	# Dritter Iterationsschritt
+	# q5 := 2 - x_1 * d
 	VRECPS.F32 q5, q3, q4
+	
+	# q3 := x_2 = x_1 * (2 - x_1 * d)
 	VMUL.F32 q3, q5, q3
-	# q3 := xn
+	
+	# Fertig, Ergebnis ist ausreichend genau (~7 signifikante Stellen)
 
-	# r1 / (r2 - r1)
+	# q3 := rad1 / (rad2 - rad1)
 	VMUL.F32 q3, q3, q1
-	# r2 * r1 / (r2 - r1)
+	
+	# q3 := rad2 * rad1 / (rad2 - rad1)
 	VMUL.F32 q3, q3, q2
-	# e_0 * 4 * pi
+	
+	# Multiplizieren mit konstantem Teil
+	# TODO: Muss nicht jedesmal neu berechnet werden
+	# q3 := e_0 * pi * 4.0 * rad2 * rad1 / (rad2 - rad1)
+	
+	# d1 := 4.0, pi
 	VLDR d1, _M_4_PI
+	
+	# q3 := 4.0 * rad2 * rad1 / (rad2 - rad1)
 	VMUL.F32 q3, q3, d1[0]
+	
+	# q3 := pi * 4.0 * rad2 * rad1 / (rad2 - rad1)
 	VMUL.F32 q3, q3, d1[1]
+	
+	# d1 := e_0, 0.0
 	VLDR d1, _M_E_0
+	
+	# q3 := e_0 * pi * 4.0 * rad2 * rad1 / (rad2 - rad1)
 	VMUL.F32 q3, q3, d1[0]
-	# ergebnis
+	
+	# /TODO
+	
+	# Berechnung des endgültigen Ergebnisses für die 2 Dielektrizitätswerte
+	# q4 := e_r[0] * e_0 * pi * 4.0 * rad2 * rad1 / (rad2 - rad1)
 	VMUL.F32 q4, q3, d0[0]
+	# q5 := e_r[1] * e_0 * pi * 4.0 * rad2 * rad1 / (rad2 - rad1)
 	VMUL.F32 q5, q3, d0[1]
-
+	
+	# Ergebnisse in q4 und q5
+	# Zurückschreiben der Ergebnisse in den richtigen Speicherbereich
+	
+	# *res1 := q4
 	VSTM r3, {q4}
+	
+	# *res2 := q5
+	# Pointer aus dem Stack laden
 	LDR r0, [r11,#0x4]
 	VSTM r0, {q5}
-
-
+	
+	# Zurückschreiben der verwendeten Register und Stackframe
 	VPOP {q0-q5}
 	SUB sp,r11, #0x0
 	POP {r11}
+	
+	# Rücksprung an Aufrufer
 	BX lr
 
+# Verwendete Konstanten (selbsterklärend)
 _M_E_0 :
 	.float 8.85418781762e-12
 	.float 0.0
@@ -210,8 +274,6 @@ _E_GUMMI :
 	.float 3.0
 _E_PAPIER :
 	.float 5.0
-_E_CONST :
-	.float 1.112650056053569442110823386467834993628329236e-10
 _M_4_PI :
 	.float 3.14159265358979323846
 	.float 4.0
