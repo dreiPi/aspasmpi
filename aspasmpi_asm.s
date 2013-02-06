@@ -43,14 +43,14 @@ _calc :
 	# Konstante 4*PI*E0 vorberechnen
 	# TODO: Multiplikation mit Dielektrizitätswerten kann auch vorberechnet werden
 	# Konstanten laden: s0 := PI, s3 := E0
-	FLDS s0, _M_PI
-	FLDS s3, _M_E_0
+	VLDR.F32 s0, _M_PI
+	VLDR.F32 s3, _M_E_0
 	## s0 := pi*e0
-	FMULS s0, s0, s3
+	VMUL.F32 s0, s0, s3
 	# s3 := 4.0
-	FLDS s3, _M_4
+	VLDR.F32 s3, _M_4
 	# s3 := 4*pi*e0, die Konstane ist nun in s3 gespeichert
-	FMULS s3, s0, s3
+	VMUL.F32 s3, s0, s3
 	
 	# Wir fangen bei Länge-1 an und zählen dann herunter bis r0==0
 	SUB r0, r0, #1
@@ -63,26 +63,26 @@ loop :
 	ADD r8, r4, r0, LSL #2
 
 	# Datensatz lesen
-	FLDS s0, [r5]
-	FLDS s1, [r6]
+	VLDR.F32 s0, [r5]
+	VLDR.F32 s1, [r6]
 	# Dielekrizität für Hartgummi laden
-	FLDS s2, _E_GUMMI
+	VLDR.F32 s2, _E_GUMMI
 
 	# Springe zu _capacity, um die Kapazität zu berechnen
 	BL _capacity
 	# Ergebnis speichern
-	FSTS s0, [r7]
+	VSTR.F32 s0, [r7]
 
 	# Datensatz wieder einlesen
-	FLDS s0, [r5]
-	FLDS s1, [r6]
+	VLDR.F32 s0, [r5]
+	VLDR.F32 s1, [r6]
 	# Dielekrizität für Hartpapier laden
-	FLDS s2, _E_PAPIER
+	VLDR.F32 s2, _E_PAPIER
 
 	# Springe zu _capacity, um die Kapazität zu berechnen
 	BL _capacity
 	# Ergebnis speichern
-	FSTS s0, [r8]
+	VSTR.F32 s0, [r8]
 	
 
 	# Zählvariable dekrementieren
@@ -118,34 +118,28 @@ _capacity :
 	# neuen Stackframe erstellen
 	ADD r11,sp, #0xc
 	# Platz in den VFP-Registern schaffen
-	FMRS r5, s3
-	FMRS r6, s4
-	FMRS r7, s5
-	PUSH {r5-r7}
+    VPUSH {s3-s5}
 
 	# Bruch ausrechnen
 
 	# s4 := rad2-rad1
-	FSUBS s4, s1, s0
+	VSUB.F32 s4, s1, s0
 
 	# s4 := rad1/(rad2-rad1)
-	FDIVS s4, s0, s4
+	VDIV.F32 s4, s0, s4
 
 	# s4 := rad1*rad2 / (rad2-rad1)
-	FMULS s4, s4, s1
+	VMUL.F32 s4, s4, s1
 	
 	# s0 := 4*pi*e0*er
-	FMULS s0, s3, s2
+	VMUL.F32 s0, s3, s2
 
 	# Kapazität berechnen (Bruch * Konstante)
-	FMULS s0, s0, s4
+	VMUL.F32 s0, s0, s4
 	# Ergebnis ist jetzt in s0
 
 	# VFP-Register wiederherstellen
-	POP {r5-r7}
-	FMSR s3, r5
-	FMSR s4, r6
-	FMSR s5, r7
+	VPOP {s3-s5}
 	# Teardown
 	# Reset stackframe
 	SUB sp, r11, #0xc
@@ -235,7 +229,7 @@ _fast_capacity :
 	# q3 := e_0 * pi * 4.0 * rad2 * rad1 / (rad2 - rad1)
 	VMUL.F32 q3, q3, d1[0]
 	
-	# /TODO
+	# //TODO was ist hier TODO?
 	
 	# Berechnung des endgültigen Ergebnisses für die 2 Dielektrizitätswerte
 	# q4 := e_r[0] * e_0 * pi * 4.0 * rad2 * rad1 / (rad2 - rad1)
