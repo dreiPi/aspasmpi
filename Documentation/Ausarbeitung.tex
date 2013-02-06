@@ -81,16 +81,26 @@ Um keine Entscheidung zugunsten einer Lösung treffen zu müssen, haben wir einf
 \subsection{Entwickler-Dokumentation}
 \subsubsection{Rahmenprogramm}
 Das in C geschriebene Rahmenprogramm liest die Datensätze mit den Radien der Kugelkondensatoren aus einer Textdatei in den Speicher.
-Dann werden drei verschiedene Implementierungsvarianten ausgeführt (Assembler mit VFP, Assembler mit NEON und Vektorisierung und die C-Referenzimplementierung), deren Ergebnisse ausgegeben werden und die dabei benötigte Zeit (in Mikrosekunden) gemessen wird.
+Dann werden drei verschiedene Implementierungsvarianten ausgeführt (Assembler mit VFP, Assembler mit NEON und Vektorisierung und die C-Referenzimplementierung), deren Ergebnisse ausgegeben werden und die dafür benötigte Zeit (in Mikrosekunden) gemessen wird.
 \\\\
-Zunächst werden über die Methode \emph{$datei\_lesen$} die in der Datei \emph{$ui.txt$} stehenden Datensätze eingelesen. Die einzulesende Datei muss dabei folgenden Richtlinien folgen:\\\\
+Zunächst werden über die Methode \emph{$datei\_lesen$} die in der Datei \emph{$ui.txt$} stehenden Datensätze eingelesen. Die einzulesende Datei muss dabei folgenden Richtlinien folgen:
+\begin{verse}
 $ $ Zeile 1: $\; \textbf{$n-1$} $ \\
 $ $ Zeile 2: $\; \textbf{$[x_{0}]_{r_{1}}$} \: $mm$ \:\emph{$[x_{0}]_{r_{2}}$} \: $mm$ $ \\
-\vdots\\
-$ $ Zeile n: $\; \textbf{$[x_{n-1}]_{r_{1}}$} \: $mm$ \:\emph{$[x_{n-1}]_{r_{2}}$} \: $mm$ $ \\\\
-Hierbei ist $x$ mit der Mächtigkeit $\vert x \vert = n$ die Menge der zu berechnenden Datensätze bestehend aus den 2-Tupeln $(r_{1},r_{2})$, wobei $r_{1}$ den Radius der inneren Kugel, $r_{2}$ den der äußeren Kugel bezeichnet.
+$\vdots $\\
+$ $ Zeile n: $\; \textbf{$[x_{n-1}]_{r_{1}}$} \: $mm$ \:\emph{$[x_{n-1}]_{r_{2}}$} \: $mm$ $
+\end{verse}
+Hierbei ist $x$ mit der Mächtigkeit $\vert x \vert = n$ die Menge aus den zu berechnenden Datensätzen bestehend aus den 2-Tupeln $(r_{1},r_{2})$, wobei $r_{1}$ den Radius der inneren Kugel und $r_{2}$ den Radius der äußeren Kugel bezeichnet.\\\\
+Im folgenden wird auf die Arbeitsweise dieser Methode anhand von Auszügen aus dem Quelltext eingegangen.
+\begin{verbatim}
+FILE* handle = NULL;
+\end{verbatim}
+Erzeugt eine Variable namens \emph{$handle$}, in der ein Pointer auf ein \emph{$FILE$}-Struct, definiert in der Headerdatei \emph{$stdio.h$} (Teil der Standard-C-Bibliotheken) gespeichert werden kann. Damit wird ein späterer Zugriff auf die einzulesende Datei ermöglicht. Zunächst wird die Variable aber auf \emph{$NULL$} gesetzt, weil noch keine Datei geöffnet wurde.
+\begin{verbatim}
+char line[MAX_LINE_LENGTH];
+\end{verbatim}
+Erzeugt eine Variable namens \emph{$line$}, in der ein Array der Größe \emph{$MAX\_LINE\_LENGTH$} (hier als 1024 definiert) mit Elementen vom Typ \emph{$char$} gespeichert wird. Benötigt wird diese Variable zum Speichern des Inhalts der aktuellen Zeile in der einzulesenden Datei.
 \subsubsection{Assemblerroutine - VFP}
-Die calc-Methode erwartet 
 %%loop
 %%capacity
 %%TODO
