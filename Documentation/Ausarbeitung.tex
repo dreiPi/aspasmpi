@@ -44,6 +44,10 @@ Beispiele für Fließkommaintensive Berechnungen sind Audioverarbeitung, 3D-Visu
 \\ \\
 Unsere Entwicklungsumgebung besteht aus \emph{ARM Development Studio 5 für Eclipse}, \emph{GNU make} und \emph{gcc 4.7}.
 
+DS-5 ist eine auf Eclipse aufgebaute Umgebung, die eine einfach zu benutzende graphische Oberfläche zum Entwickeln, Ausführen und Debuggen von Programmen für ARM-Systeme bereitstellt. Die Einrichtung ist jedoch etwas umständlich, da DS-5 nicht ganz fehlerfrei ist und keinen klaren Leitfaden zum Erstellen eines Projekts bietet.
+
+GCC ist eine der weitverbreitesten Compilersuiten, ist vollständig Open Source und in der Lage, für alle bekannten Architekturen und Betriebssysteme C, C++ und Assemblercode zu Binärcode umzubauen, wobei zusätzlich auch umfangreiche und effektive Optimisierungsoptionen vorhanden sind.
+
 \section{Lösungsalternativen}
 \subsection{Unsere Lösung -- Vector Floating Point (VFP)}
 \subsection*{Vorstellung}
@@ -69,24 +73,35 @@ zu profitieren. Das bedeutet, dass pro Assemblerbefehl nicht mit einem, sondern 
 \begin{itemize}
 \item SIMD Befehle müssen jeweils zwei oder vier Fließkommazahlen verarbeiten. Falls die Eingabedatenmenge kein Vielfaches von vier ist, kann für den entsprechenden Rest nicht derselbe Code verwendet werden.
 \item Der NEON Befehlssatz verfügt über keinen Divisionsbefehl. Die einzige Möglichkeit ist eine Annäherung an den Kehrbruch mit \emph{VRECPE} und anschließende Multiplikation. 
-Jedoch ist die einmalige Annäherung dadurch nicht sehr genau, wir erreichen jedoch durch zweimalige Iteration des Newton-Raphson-Verfahrens unter Zuhilfenahme von \emph{VRECPS} eine Genauigkeit von ~7 signifikanten Stellen, was sich als am praktikabelsten herausgestellt hat. 
+Die einmalige Annäherung ist dadurch nicht sehr genau, durch zweimalige Iteration des Newton-Raphson-Verfahrens mittels \emph{VRECPS} erreichen wir jedoch eine Genauigkeit von ~7 signifikanten Stellen, was sich als am praktikabelsten herausgestellt hat. 
 \end{itemize}
 \subsection{Entscheidungsprozess}
 Um keine Entscheidung zugunsten einer Lösung treffen zu müssen, haben wir einfach alle Alternativen selbst implementiert.
+%%TODO NEON haben wir nur beispielhaft implementiert, loop fehlt
 \section{Dokumentation der Implementierung}
 \subsection{Entwickler-Dokumentation}
 \subsubsection{Rahmenprogramm}
-\subsubsection{Assemblerroutine}
+Das in C geschriebene Rahmenprogramm liest die Datensätze mit den Radien der Kugelkondensatoren aus einer Textdatei in den Speicher.
+Dann werden drei verschiedene Implementierungsvarianten ausgeführt (Assembler mit VFP, Assembler mit NEON und Vektorisierung und die C-Referenzimplementierung), deren Ergebnisse ausgegeben und die benötigte Zeit gemessen.
+\subsubsection{Assemblerroutine - VFP}
+%%calc
+%%loop
+%%capacity
+%%TODO
+\subsubsection{Assemblerroutine - NEON und Vektorisierung}
+%%TODO
+Da wir uns für eine Implementierung ohne Vektorisierung entschieden haben, haben wir den Aufrufcode nicht an die Vektorisierung angepasst und haben das NEON-Beispiel direkt mittels C-Code angesprochen.
 \subsubsection{Optimierungen}
+%%TODO
 \subsection{Benutzer-Dokumentation}
-
+%%TODO
 \section{Ergebnisse}
 \subsection{Vergleich von Assembler und C-Code}
 \subsubsection{Genauigkeit der Ergebnisse}
+%%TODO
 \subsubsection{Laufzeit}
+%%TODO
 \subsection{Analyse und Bewertung}
-
-
-
+%%TODO
 
 \end{document}
