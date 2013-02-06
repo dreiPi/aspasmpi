@@ -41,7 +41,6 @@ _calc :
 	LDR r4, [r11,#-0x14]
 
 	# Konstante 4*PI*E0 vorberechnen
-	# TODO: Multiplikation mit Dielektrizitätswerten kann auch vorberechnet werden
 	# Konstanten laden: s0 := PI, s3 := E0
 	VLDR.F32 s0, _M_PI
 	VLDR.F32 s3, _M_E_0
@@ -148,12 +147,12 @@ _capacity :
 	# Rücksprung an Ausfrufer
 	BX lr
 
-# void fast_capacity(float* r1, float* r2, float* ers, float* res1, float* res2)
+# void fast_capacity(float* r1, float* r2, float* er, float* res1, float* res2)
 
 # Benutzt NEON-Befehle zum gleichzeitigen Berechnen der Kapazität von 4 Kugelkondensatoren mit jeweils 2 Dielektrizitätswerten
 # r1: 4 x innerer Radius der Kugelkondensatoren
 # r2: 4 x äußerer Radius der Kugelkondensatoren
-# ers: 2 x Dielektrizitätswert
+# er: 2 x Dielektrizitätswert
 # res1: Ergebnisse mit Dielektrizitätswert 1
 # res2: Ergebnisse mit Dielektrizitätswert 2
 
@@ -211,7 +210,6 @@ _fast_capacity :
 	VMUL.F32 q3, q3, q2
 	
 	# Multiplizieren mit konstantem Teil
-	# TODO: Muss nicht jedesmal neu berechnet werden
 	# q3 := e_0 * pi * 4.0 * rad2 * rad1 / (rad2 - rad1)
 	
 	# d1 := 4.0, pi
@@ -228,8 +226,6 @@ _fast_capacity :
 	
 	# q3 := e_0 * pi * 4.0 * rad2 * rad1 / (rad2 - rad1)
 	VMUL.F32 q3, q3, d1[0]
-	
-	# //TODO was ist hier TODO?
 	
 	# Berechnung des endgültigen Ergebnisses für die 2 Dielektrizitätswerte
 	# q4 := e_r[0] * e_0 * pi * 4.0 * rad2 * rad1 / (rad2 - rad1)

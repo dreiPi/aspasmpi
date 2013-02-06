@@ -23,16 +23,24 @@
 extern void _calc(float* data1, float* data2, float* result1, float* result2, int length);
 
 /**
- * Berechnet einen einzigen Wert
+ * Berechnet die Kapazität eines Kugelkondensators
  * @param r1 innerer Radius
  * @param r2 äußerer Radius
- * @param e_r Dielektrizität für das verwendete Material
+ * @param er Dielektrizität für das verwendete Material
  * @param _4_pi_e0 eine vorgegebene Konstante, 4*pi*e0
  * @return die Kapazität des Kugelkondensators
  */
 extern float _capacity(float rad1, float rad2, float er, float _4_pi_e0);
 
-extern void _fast_capacity(float* r1, float* r2, float* e0, float* res1, float* res2);
+/**
+ * Berechnet die Kapazität von 4 Kugelkondensatoren mit jeweils 2 Dielektrika
+ * @param r1 ein 4 Elemente großes Array, in dem die inneren Radien gespeichert sind
+ * @param r2 ein 4 Elemente großes Array, in dem die äußeren Radien gespeichert sind
+ * @param er ein 2 Elemente großes Array, in dem die Dielektrizitäten für die verwendeten Materialien gespeichert sind
+ * @param res1 Ergebnisse für Dielektrizitätswert 1
+ * @param res2 Ergebnisse für Dielektrizitätswert 2
+ */
+extern void _fast_capacity(float* r1, float* r2, float* er, float* res1, float* res2);
 
 // Vordeklarationen
 
@@ -55,6 +63,7 @@ int main(int argc, char **argv) {
 	result1 = (float*)malloc(length * sizeof(float));
 	result2 = (float*)malloc(length * sizeof(float));
 
+	//Sicherstellen dass der Speicher korrekt allokiert wurde
 	assert((result1!=NULL&&result2!=NULL));
 	// Zeitmessung
 	struct timeval start,end;
@@ -68,7 +77,7 @@ int main(int argc, char **argv) {
 
 	printf("ARM: time needed: %f usec \n", utimediff);
 
-	// das erste, mittlere und letzte Ergebnis ausgeben
+	// das erste, 1/3ste, 2/3ste und letzte Ergebnis ausgeben
 	printf("Ergebnisse der Assemblerimplementierung: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
 	for(int i=0; i<length; i+=length/3) {
@@ -76,15 +85,20 @@ int main(int argc, char **argv) {
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
 
+	// Dasselbe mit der NEON-Methode
 	gettimeofday(&start,0);
 	float er[2] = {E_GUMMI,E_PAPIER};
 	for(int i=0;i<length-4;i+=4) {
 		_fast_capacity(rad1+i, rad2+i, er, result1+i, result2+i);
 	}
 	gettimeofday(&end,0);
+
+	// Zeitberechnung
 	utimediff = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+
 	printf("NEON: time needed: %f usec \n", utimediff);
-	// das erste, mittlere und letzte Ergebnis ausgeben
+
+	// das erste, 1/3ste, 2/3ste und letzte Ergebnis ausgeben
 	printf("Ergebnisse der NEON-Implementierung: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
 	for(int i=0; i<length; i+=length/3) {
@@ -186,7 +200,6 @@ int datei_lesen(char* filename, float** rad1, float** rad2, int* length) {
 /**
  * Referenzimplementierung des Assemblercodes in C.
  * Führt die Berechnung der Kapazitäten aller angegebener Datensätze an.
- * Verwendet dazu die Methode capacity_c().
  * @param data1 ein Array, in dem die inneren Radien gespeichert sind
  * @param data2 ein Array, in dem die äußeren Radien gespeichert sind
  * @param result1 in diesem Array werden die Ergebnisse für Hartgummi gespeichert
