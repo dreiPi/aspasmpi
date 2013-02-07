@@ -121,6 +121,11 @@ int main(int argc, char **argv) {
 		printf("%8d: %1.8e %1.8e %1.8e %1.8e\n", i,
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
+	
+	free(result1);
+	free(result2);
+	free(rad1);
+	free(rad2);
 
 	return 0;
 }
