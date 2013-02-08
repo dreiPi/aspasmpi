@@ -18,6 +18,18 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 
+\usepackage{listings}
+\lstset{literate=%
+{Ö}{{\"O}}1
+{Ä}{{\"A}}1
+{Ü}{{\"U}}1
+{ß}{{\ss}}1
+{ü}{{\"u}}1
+{ä}{{\"a}}1
+{ö}{{\"o}}1
+}
+\lstset{tabsize=4,showspaces=false,language=C}
+
 \begin{document}
 
 \sheetHeader{Projektaufgabe \theNumber : \theName}{Gruppe \theGroup:}{\nameM}{\nameE}{\nameC}
@@ -92,65 +104,71 @@ $\vdots $\\
 $ $ Zeile n: $\; \textbf{$[x_{n-1}]_{r_{1}}$} \: $mm$ \:\emph{$[x_{n-1}]_{r_{2}}$} \: $mm$ $
 \end{verse}
 Hierbei ist $x$ (mit der Mächtigkeit $\vert x \vert = n$) die Menge aus den zu berechnenden Datensätzen bestehend aus den 2-Tupeln $(r_{1},r_{2})\in \mathbb{R}^{2} $, wobei $r_{1}$ den Radius der inneren Kugel und $r_{2}$ den Radius der äußeren Kugel bezeichnet.
-\begin{verbatim}
+\begin{lstlisting}[language=C]
 int erfolg = datei_lesen("ui.txt", &rad1, &rad2, &length);
-	if(erfolg != 0) {
-		return erfolg;
-	}
-\end{verbatim}
+if(erfolg != 0) {
+	return erfolg;
+}
+\end{lstlisting}
 Die Methode wird mit den benötigten Parametern (Name der einzulesenden Datei,  Pointer auf ein \emph{float}-Array, in dem die inneren Radien gespeichert werden, Pointer auf ein \emph{float}-Array, in dem die äußeren Radien gespeichert werden, Pointer auf einen \emph{Integer}, in dem die Länge des Datensatzes gespeichert wird) aufgerufen und der Rückgabewert gesichert, der einen eventuell aufgetretenen Fehler spezifiziert ($\neq 0$ bei einem Fehler). Wenn ein Fehler aufgetreten ist wird dies anschließend erkannt und das Programm mit diesem Fehlerwert beendet.\\
 Im folgenden wird auf die Arbeitsweise dieser Methode anhand von weiteren Auszügen aus dem Quelltext eingegangen.
-\begin{verbatim}
+\begin{lstlisting}[language=C]
 FILE* handle = NULL;
-\end{verbatim}
+\end{lstlisting}
 Erzeugt eine Variable namens \emph{$handle$}, in der ein Pointer auf ein \emph{$FILE$}-Struct, definiert in der Headerdatei \emph{$stdio.h$} (Teil der Standard-C-Bibliotheken) gespeichert werden kann. Damit wird ein späterer Zugriff auf die einzulesende Datei ermöglicht. Zunächst wird die Variable aber auf \emph{$NULL$} gesetzt, weil noch keine Datei geöffnet wurde.
-\begin{verbatim}
+\begin{lstlisting}[language=C]
 char line[MAX_LINE_LENGTH];
-\end{verbatim}
+\end{lstlisting}
 Erzeugt eine Variable namens \emph{$line$}, in der ein Array der Größe \emph{$MAX\_LINE\_LENGTH$} (als \emph{1024} definiert) mit Elementen vom Typ \emph{$char$} gespeichert wird. Benötigt wird diese Variable zum Speichern des Inhalts der aktuellen Zeile in der einzulesenden Datei.
-%%TODO: Wieso funktionieren hier keine Tabs?
-\begin{verbatim}
-	handle = fopen(filename, "r");
-	if(!handle) {
-			fprintf(stderr,"FEHLER: Datei konnte nicht geoeffnet werden!\n");
-			return 1; 
-	}
-\end{verbatim}
+\begin{lstlisting}[language=C]
+handle = fopen(filename, "r");
+if(!handle) {
+	fprintf(stderr,"FEHLER: Datei konnte nicht geoeffnet werden!\n");
+	return 1; 
+}
+\end{lstlisting}
 Mit \emph{fopen} wird versucht die Datei, die unter dem Pfad spezifiziert vom Parameter \emph{filename} zu finden ist, im Lesemodus (deshalb das \emph{"r"} als zweiter Parameter) zu öffnen und anschließend eine Zugriffsreferenz für die spätere Verwendung unter der vorher definierten Variable \emph{handle} zu sichern. Schlägt dies fehl, d.h. \emph{handle} hat den Wert \emph{0}, wird eine entsprechende Ausgabe an den systemweiten Error-Stream gesendet und die Methode mit dem Rückgabewert \emph{1} abgebrochen.
-\begin{verbatim}
+\begin{lstlisting}[language=C]
 if(feof(handle) || fgets(line, MAX_LINE_LENGTH, handle)==NULL) {
-		fprintf(stderr,"Fehler: Datei ist leer\n");
-		return 1;
-	}
-\end{verbatim}
+	fprintf(stderr,"Fehler: Datei ist leer\n");
+	return 1;
+}
+\end{lstlisting}
 Hier wird überprüft, ob es sich bei der einzulesenden Datei um eine leere Datei handelt bzw. von der Datei überhaupt gelesen werden kann. Zunächst wird mittels \emph{feof} sichergestellt, dass das Ende des Dateistreams noch nicht erreicht ist, um anschließend zu überprüfen ob die erste Zeile gelesen werden kann. Die Methode \emph{fgets} erwartet hierbei einen Pointer auf ein \emph{char}-Array (\emph{line}), in das bei einem erfolgreichen Lesevorgang die nächsten \emph{1024} (\emph{MAX\_LINE\_LENGTH}) Zeichen des Streams \emph{handle} geschrieben werden. Schlägt einer der Tests fehl, wird wiederum eine entsprechende Ausgabe an den systemweiten Error-Stream gesendet und die Methode mit dem Rückgabewert \emph{1} abgebrochen.
-\begin{verbatim}
-	*length = atoi(line);
-	if(*length <= 0) {
-		fprintf(stderr, "Fehler: '%s' ist keine sinnvolle Zeilennummer\n", line);
-		return 1;
-	}
-\end{verbatim}
+\begin{lstlisting}[language=C]
+*length = atoi(line);
+if(*length <= 0) {
+	fprintf(stderr, "Fehler: '%s' ist keine sinnvolle Zeilennummer\n", line);
+	return 1;
+}
+\end{lstlisting}
 Um die Größe des Datensatzes herauszufinden, wird hier der Inhalt der ersten Zeile mittels \emph{atoi} in einen \emph{Integer} umgewandelt, der dann im vom Parameter \emph{length} referenzierten Speicher gesichert wird. Um fehlerhafte Daten auszuschließen, wird danach überprüft, ob es sich eine sinnvolle Länge handelt ($>0$). Ist dies nicht der Fall wird eine entsprechende Fehlermeldung ausgegeben und die Methode mit dem Rückgabewert \emph{1} abgebrochen.
-\begin{verbatim}
-	*rad1 = (float*)malloc(*length * sizeof(float));
-	*rad2 = (float*)malloc(*length * sizeof(float));
-	if(!rad1 || !rad2) {
-		fprintf(stderr,"Fehler: keinen Speicher bekommen\n");
-		return 1;
-	}
-\end{verbatim}
+\begin{lstlisting}[language=C]
+*rad1 = (float*)malloc(*length * sizeof(float));
+*rad2 = (float*)malloc(*length * sizeof(float));
+if(!rad1 || !rad2) {
+	fprintf(stderr,"Fehler: keinen Speicher bekommen\n");
+	return 1;
+}
+\end{lstlisting}
 Zunächst wird für die inneren (\emph{rad1}) und äußeren (\emph{rad2}) Radien der Kugelkondensatoren des Datensatzes versucht, entsprechend großen Speicher zu allozieren (Länge des Datensatzes multipliziert mit der Größe der Daten selbst, die ja aus \emph{float}s bestehen). Anschließend wird überprüft, ob dieser Vorgang erfolgreich ausgeführt werden konnte, wobei bei einem Fehler ähnliches passiert wie in den vorangehenden Absätzen.
 \\\\
 Die nachfolgende Schleife versucht, die Datei zeilenweise einzulesen und die dabei gewonnenen Daten im passenden Speicherbereich zu sichern. Dabei wird jeweils ähnlich wie zu Beginn der Methode sichergestellt, dass weder das Ende der Datei erreicht noch eine leere Zeile eingelesen wurde.
-\begin{verbatim}
+\begin{lstlisting}[language=C]
 if(sscanf(line, "%f mm %f mm", (*rad1+index), (*rad2+index)) != 2) {
-			fprintf(stderr, "Fehler in Z. %d: %s\n", index, line);
-			fprintf(stderr, "Ich bin mal weg\n");
-			return 1;
-		}
-\end{verbatim}
+	fprintf(stderr, "Fehler in Z. %d: %s\n", index, line);
+	fprintf(stderr, "Ich bin mal weg\n");
+	return 1;
+}
+\end{lstlisting}
 Die Daten in der aktuellen Zeile der Datei werden hier mittels \emph{sscanf} extrahiert und an der entsprechenden Position in den Arrays gespeichert. Die Parameter dieser Funktion verhalten sich dabei gleich wie \emph{sprintf}, nur die Funktionsweise ist umgekehrt (Werte einlesen statt ausgeben). Der Rückgabewert entspricht dabei den erfolgreich ausgelesenen Werten, wenn dieser also nicht \emph{2} ist, was bedeuten würde, dass die aktuelle Zeile ein ungültiges Format hat, wird das Einlesen abgebrochen und eine entsprechende Fehlermeldung ausgegeben. Außerdem werden Gegenmaßnahmen durchgeführt, falls in der Datei zu viele (> \emph{length}: restliche Daten werden ignoriert) oder zu wenige (< \emph{length}: \emph{length} wird entsprechend geändert) Daten zu finden sind.\\
+Abschließend wird die geöffnete Datei noch mittels \emph{fclose} geschlossen und ein Fehler ausgegeben, falls sie nicht geschlossen werden konnte.
+\begin{lstlisting}[language=C]
+if(!fclose(handle)) {
+	fprintf(stderr, "Fehler: Konnte Eingabedatei nicht schließen.\n");
+}
+\end{lstlisting}
+
 Nun sollte sichergestellt sein, dass gültige Daten eingelesen wurden, diese werden dann, nachdem genügend großer Speicher für die Ergebnisse alloziert wurde der Assemblerroutine übergeben. Vorher wird noch der aktuelle Timestamp gespeichert, damit eine Zeitmessung erfolgen kann.
 
 \subsubsection{Assemblerroutine - VFP-Version}

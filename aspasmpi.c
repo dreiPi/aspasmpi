@@ -146,7 +146,7 @@ int datei_lesen(char* filename, float** rad1, float** rad2, int* length) {
 	// hier kommt unser Handle rein
 	FILE* handle = NULL;
 	char line[MAX_LINE_LENGTH];
-
+	
 	// Datei öffnen
 	handle = fopen(filename, "r");
 	if(!handle) {
@@ -199,12 +199,12 @@ int datei_lesen(char* filename, float** rad1, float** rad2, int* length) {
 		fprintf(stderr,"Fehler: zu wenige Werte\n");
 		*length = index;
 	}
-    
-    // Datei-Handle schließen 
-    if(!fclose(handle)) {
-        fprintf(stderr, "Fehler: Konnte Eingabedatei nicht schließen.");
-    }
-    
+	
+	// Datei-Handle schließen 
+	if(!fclose(handle)) {
+		fprintf(stderr, "Fehler: Konnte Eingabedatei nicht schließen.\n");
+	}
+	
 	return 0;
 }
 
