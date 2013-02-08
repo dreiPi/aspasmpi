@@ -117,7 +117,7 @@ _capacity :
 	# neuen Stackframe erstellen
 	ADD r11,sp, #0xc
 	# Platz in den VFP-Registern schaffen
-    VPUSH {s3-s5}
+	VPUSH {s3-s5}
 
 	# Bruch ausrechnen
 
@@ -129,7 +129,7 @@ _capacity :
 
 	# s4 := rad1*rad2 / (rad2-rad1)
 	VMUL.F32 s4, s4, s1
-	
+
 	# s0 := 4*pi*e0*er
 	VMUL.F32 s0, s3, s2
 
