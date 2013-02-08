@@ -75,7 +75,8 @@ clean:
 		$(call RM,$(OBJS_ASM))
 		$(call RM,$(TARGET))
 
-
+doc:
+		make -C Dokumentation
 
 
 # Compile the sources
