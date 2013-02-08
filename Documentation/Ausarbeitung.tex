@@ -150,11 +150,106 @@ if(sscanf(line, "%f mm %f mm", (*rad1+index), (*rad2+index)) != 2) {
 			return 1;
 		}
 \end{verbatim}
-Die Daten in der aktuellen Zeile der Datei werden hier mittels \emph{sscanf} extrahiert und an der entsprechenden Position in den Arrays gespeichert. Die Parameter dieser Funktion verhalten sich dabei gleich wie \emph{sprintf}, nur die Funktionsweise ist umgekehrt (Werte einlesen statt ausgeben). Der Rückgabewert entspricht dabei den erfolgreich ausgelesenen Werten, wenn dieser also nicht \emph{2} ist, was bedeuten würde, dass die aktuelle Zeile ein ungültiges Format hat, wird das Einlesen abgebrochen und eine entsprechende Fehlermeldung ausgegeben. Außerdem werden Gegenmaßnahmen durchgeführt, falls in der Datei zu viele (> \emph{length}: restliche Daten werden ignoriert) oder zu wenige (< \emph{length}: \emph{length} wird entsprechend geändert) Daten zu finden sind.\\
-Nun sollte sichergestellt sein, dass gültige Daten eingelesen wurden, diese werden dann, nachdem genügend großer Speicher für die Ergebnisse alloziert wurde der Assemblerroutine übergeben. Vorher wird noch der aktuelle Timestamp gespeichert, damit eine Zeitmessung erfolgen kann.
+Die Daten in der aktuellen Zeile der Datei werden hier mittels \emph{sscanf} extrahiert und an der entsprechenden Position in den Arrays gespeichert. Die Parameter dieser Funktion verhalten sich dabei gleich wie \emph{sprintf}, nur die Funktionsweise ist umgekehrt (Werte werden eingelesen statt ausgegeben). Der Rückgabewert entspricht dabei den erfolgreich ausgelesenen Werten, wenn dieser also nicht \emph{2} ist, was bedeuten würde, dass die aktuelle Zeile ein ungültiges Format hat, wird das Einlesen abgebrochen und eine entsprechende Fehlermeldung ausgegeben. Außerdem werden Gegenmaßnahmen durchgeführt, falls in der Datei zu viele (> \emph{length}: restliche Daten werden ignoriert) oder zu wenige (< \emph{length}: \emph{length} wird entsprechend geändert) Daten zu finden sind.\\
+Nun sollte sichergestellt sein, dass gültige Daten eingelesen wurden, diese werden dann, nachdem genügend großer Speicher für die Ergebnisse alloziert wurde der Assemblerroutine übergeben. Vorher wird noch der aktuelle Timestamp gespeichert, damit eine Zeitmessung erfolgen kann. Nachdem die Berechnung erfolgt ist, werden Auszüge aus den Ergebnissen ausgegeben sowie die benötigte Zeit.
 
 \subsubsection{Assemblerroutine - VFP-Version}
-%%loop
+Der Einstiegspunkt der Assemblerroutine ist die Funktion \emph{\_calc}. Diese erwartet als Parameter 2 \emph{float}-Arrays (data1/data2), die die inneren/äußeren Radien der Kugelkondensatoren beinhalten, 2 \emph{float}-Arrays (result1/result2), in denen die Ergebnisse (also die Kapazitäten der Kondensatoren) für die beiden Dielektrika Hartgummi und -papier gespeichert werden, sowie die Größe des Datensatzes als \emph{Integer} (length).\\
+Im folgenden wird auf die Arbeitsweise dieser Routine anhand von Auszügen aus dem Quellcode näher eingegangen.
+\begin{verbatim}
+PUSH {r4-r10,r11}
+\end{verbatim}
+Hier werden zunächst alle in der Routine verwendeten Register auf dem Stack gesichert, um sie später wiederherstellen zu können.
+\begin{verbatim}
+ADD r11,sp, #0x1c
+\end{verbatim}
+Das Register \emph{r11} wird mit einem neuen Stackpointer beschrieben, der für den benötigten Stackframe verwendet wird. Da vorher \emph{7} Words ($7 \cdot 4 = 28$ Byte groß, ausgenommen \emph{r11} selbst) auf den Stack gepusht wurden, wird der referenzierte Speicher um \emph{28} ($_{16}1c$) Bytes erhöht. 
+\begin{verbatim}
+SUB sp, sp, #20
+\end{verbatim}
+Vom eigentlichen Stackpointer werden nun \emph{20} Bytes (\emph{5} Words) abgezogen, da dieser Platz später zum sichern der Parameter benötigt wird.
+\begin{verbatim}
+STR r0, [r11,#-0x8]
+STR r1, [r11,#-0xc]
+STR r2, [r11,#-0x10]
+STR r3, [r11,#-0x14]
+PUSH {lr}
+\end{verbatim}
+Die ersten \emph{4} Parameter (\emph{r0}: data1, \emph{r1}: data2, \emph{r2}: result1, \emph{r3}: result2) werden auf dem Stack gesichert, jeder Kopiervorgang wird dabei mit einem entsprechenden Offset ausgeführt (jeweils um die Größe eines Words vermindert, beim ersten Vorgang ein Word mehr, da sonst der vorher gesicherte Wert von \emph{r11} überschrieben werden würde). Zusätzlich wird das Link-Register (\emph{lr}) auf dem Stack platziert.
+\begin{verbatim}
+	LDR r0, [r11,#4]
+	STR r0, [r11,#-0x18]
+\end{verbatim}
+Der \emph{5}. Parameter (\emph{length}) wird gemäß Calling-Convention nicht direkt in einem Register übergeben, sondern befindet sich auf dem Stack. Von dort wird er zunächst in das Register \emph{r0} geladen, um ihn anschließend an der von uns benötigten Position im Stack zu sichern.
+\begin{verbatim}
+	LDR r1, [r11,#-0x8]
+	LDR r2, [r11,#-0xc]
+	LDR r3, [r11,#-0x10]
+	LDR r4, [r11,#-0x14]
+\end{verbatim}
+Hier werden die restlichen Parameter wieder in die benötigten Register geschrieben (\emph{r1}: data1, \emph{r2}: data2, \emph{r3}: result1, \emph{r4}: result2).
+\begin{verbatim}
+	VLDR.F32 s0, _M_PI
+	VLDR.F32 s3, _M_E_0
+	VMUL.F32 s0, s0, s3
+	VLDR.F32 s3, _M_4
+	VMUL.F32 s3, s0, s3
+\end{verbatim}
+Nun kann die eigentliche Berechnung beginnen: Der konstante Faktor der Formel ($4 \cdot \pi \cdot \varepsilon_{0}$) wird hier vorberechnet. Dazu werden zunächst der Wert von $\pi$ und $\varepsilon_{0}$ in den Single-Precision-Registern \emph{s0} und \emph{s3} gespeichert, damit mit diesen Werten Fließkomma-Operationen durchgeführt werden können. Anschließend werden diese beiden Zahlen multipliziert und auf ähnliche Weise mit dem Faktor $4$ verrechnet. Das Ergebnis (also der konstante Teil der Formel) steht nun im Register \emph{s3}. Ausgeführt werden all diese (und auch spätere) Befehle mit \emph{32}bit-Fließkommazahlen.
+\begin{verbatim}
+SUB r0, r0, #1
+loop :
+	ADD r5, r1, r0, LSL #2
+	ADD r6, r2, r0, LSL #2
+	ADD r7, r3, r0, LSL #2
+	ADD r8, r4, r0, LSL #2
+\end{verbatim}
+Um die richtige Anzahl an Schleifendurchläufen auszuführen, muss von der Größe des Datensatzes (Parameter \emph{length}, in \emph{r0} gespeichert) noch \emph{1} subtrahiert werden, da Arrays ja bekanntlich \emph{0}-basiert sind. Anschließend werden mit einem Label (\emph{loop}) das Beginn der Schleife markiert und die Pointer (für die Eingabe/Ausgabe) an die richtige Position gesetzt. Dafür wird die Zählvariable (\emph{r0}) zunächst mittels \emph{LSL \#2} (Logical Shift Left, entspricht Multiplikation mit $2^{n}$) über den Barrel-Shifter mit $4$ multipliziert, um gültige Speicheroffsets zu bekommen (ein \emph{float} ist \emph{4} Byte groß).
+\begin{verbatim}
+	VLDR.F32 s0, [r5]
+	VLDR.F32 s1, [r6]
+	VLDR.F32 s2, _E_GUMMI
+	BL _capacity
+	VSTR.F32 s0, [r7]
+\end{verbatim}
+Zunächst werden die an den vorher berechneten Speicheradressen stehenden Werte (also der innere/äußere Radius des Kugelkondensators) in die für die Routine \emph{\_capacity} (führt eigentliche Berechnung der Kapazität aus) benötigten Register kopiert und der Dielektrizitätswert für Hartgummi in das richtige Register geladen. Dann wird mittels \emph{BL} ein Sprung zu dieser Routine durchgeführt, wobei die Rücksprungadresse implizit im Link-Register gesichert wird. Ist die Routine fertig, wird das Ergebnis, dass per Konvention in Register \emph{s0} gespeichert wurde, an die richtige Stelle im Ergebnis-Array geschrieben.
+Danach wird dasselbe (mit anderen Speicheradressen) noch einmal für das Dielektrikum Hartpapier durchgeführt.
+\begin{verbatim}
+SUBS r0, r0, #1
+BPL loop
+\end{verbatim} 
+Nach dem Dekrementieren der Zählvariable (mit Operationssuffix \emph{S}, um entsprechende Flags zu aktualisieren), wird, falls die Subtraktion keinen Über/Unterlauf verursacht hat (d.h. $r0 >= 0$, angezeigt über die \emph{N}-Flag) wieder an den Schleifenanfang gesprungen und die Datenverarbeitung fortgesetzt.
+\begin{verbatim}
+	POP {lr}
+	SUB sp, r11, #0x1c
+	POP {r4-r10,r11}
+	BX lr
+\end{verbatim}
+Am Ende werden alle (vorher gesicherten) verwendeten Register wiederhergestellt, der Stackframe wiederhergestellt und ein Rücksprung zu der im Link-Register gespeicherten Adresse veranlasst.
+\\\\
+Im folgenden wird die Routine \emph{\_capacity}, die die eigentliche Berechnung der Kapazität durchführt, näher beschrieben. Diese Funktion erwartet als Parameter 3 \emph{float}-Werte (innerer/äußerer Radius und konstanter Teil der Formel wie oben erläutert) und liefert das Ergebnis in Register \emph{s0} zurück.
+\begin{verbatim}
+PUSH {r5-r7,r11}
+ADD r11,sp, #0xc
+VPUSH {s3-s5}
+\end{verbatim}
+Ähnlich wie vorangehend beschrieben werden hier die verwendeten Register auf dem Stack gesichert und ein neuer Stackframe erstellt. \emph{VPUSH} sichert hierbei auch die verwendeten VFP-Register.
+\begin{verbatim}
+	VSUB.F32 s4, s1, s0
+	VDIV.F32 s4, s0, s4
+	VMUL.F32 s4, s4, s1
+	VMUL.F32 s0, s3, s2
+	VMUL.F32 s0, s0, s4
+\end{verbatim}
+Dieser Teil führt die Berechnung der Kapazität aus: Zunächst wird der innere Radius vom äußeren subtrahiert, anschließend mit dem Produkt aus den Radien der Quotient gebildet. Am Schluss wird das noch mit dem konstanten Teil der Formel multipliziert und das Ergebnis ist fertig berechnet.
+\begin{verbatim}
+	VPOP {s3-s5}
+	SUB sp, r11, #0xc
+	POP {r5-r7,r11}
+	BX lr
+\end{verbatim}
+Am Ende werden die verwendeten (und vorher gesicherten) Register wiederhergestellt, der Stackframe zurückgesetzt und mittels \emph{BX} ein Rücksprung zum Aufrufer (bzw. an die im Link-Register gespeicherte Adresse) veranlasst.
+
 %%capacity
 %%TODO
 \subsubsection{Assemblerroutine - NEON-Version}

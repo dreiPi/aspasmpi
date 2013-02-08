@@ -4,7 +4,7 @@
 # data2: äußerer Radius der Kondensatoren
 # result1: Ergebnisse der Berechnung mit Hartgummi
 # result2: Ergebnisse der Berechnung mit Hartpapier
-# length: Anzahl der zu berechnenden Kapazitäten/Lände des Datensatzes
+# length: Anzahl der zu berechnenden Kapazitäten/Länge des Datensatzes
 
 # r0 = data1 -> [r11,#-0x8]
 # r1 = data2 -> [r11,#-0xc]
@@ -144,7 +144,7 @@ _capacity :
 	SUB sp, r11, #0xc
 	# Register und Stackframe POPpen
 	POP {r5-r7,r11}
-	# Rücksprung an Ausfrufer
+	# Rücksprung an Aufrufer
 	BX lr
 
 # void fast_capacity(float* r1, float* r2, float* er, float* res1, float* res2)
