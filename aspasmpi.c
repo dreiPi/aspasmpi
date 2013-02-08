@@ -199,6 +199,12 @@ int datei_lesen(char* filename, float** rad1, float** rad2, int* length) {
 		fprintf(stderr,"Fehler: zu wenige Werte\n");
 		*length = index;
 	}
+    
+    // Datei-Handle schließen 
+    if(!fclose(handle)) {
+        fprintf(stderr, "Fehler: Konnte Eingabedatei nicht schließen.");
+    }
+    
 	return 0;
 }
 
