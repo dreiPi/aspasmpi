@@ -82,7 +82,7 @@ Um keine Entscheidung zugunsten einer Lösung treffen zu müssen, haben wir einf
 \subsection{Entwickler-Dokumentation}
 \subsubsection{Rahmenprogramm}
 Das in C geschriebene Rahmenprogramm liest die Datensätze mit den Radien der Kugelkondensatoren aus einer Textdatei in den Speicher.
-Dann werden drei verschiedene Implementierungsvarianten ausgeführt (Assembler mit VFP, Assembler mit NEON und Vektorisierung und die C-Referenzimplementierung), deren Ergebnisse ausgegeben werden und die dafür benötigte Zeit (in Mikrosekunden) gemessen wird.
+Mit diesen Daten werden dann drei verschiedene Implementierungsvarianten ausgeführt (Assembler mit VFP, Assembler mit NEON und Vektorisierung und die C-Referenzimplementierung), deren Ergebnisse ausgegeben werden und die dafür benötigte Zeit (in Mikrosekunden) gemessen wird.
 \\\\
 Zunächst werden über die Methode \emph{$datei\_lesen$} die in der Datei \emph{$ui.txt$} stehenden Datensätze eingelesen. Die einzulesende Datei muss dabei folgenden Richtlinien folgen:
 \begin{verse}
@@ -91,8 +91,15 @@ $ $ Zeile 2: $\; \textbf{$[x_{0}]_{r_{1}}$} \: $mm$ \:\emph{$[x_{0}]_{r_{2}}$} \
 $\vdots $\\
 $ $ Zeile n: $\; \textbf{$[x_{n-1}]_{r_{1}}$} \: $mm$ \:\emph{$[x_{n-1}]_{r_{2}}$} \: $mm$ $
 \end{verse}
-Hierbei ist $x$ mit der Mächtigkeit $\vert x \vert = n$ die Menge aus den zu berechnenden Datensätzen bestehend aus den 2-Tupeln $(r_{1},r_{2})\in \mathbb{R}^{2} $, wobei $r_{1}$ den Radius der inneren Kugel und $r_{2}$ den Radius der äußeren Kugel bezeichnet.\\\\
-Im folgenden wird auf die Arbeitsweise dieser Methode anhand von Auszügen aus dem Quelltext eingegangen.
+Hierbei ist $x$ (mit der Mächtigkeit $\vert x \vert = n$) die Menge aus den zu berechnenden Datensätzen bestehend aus den 2-Tupeln $(r_{1},r_{2})\in \mathbb{R}^{2} $, wobei $r_{1}$ den Radius der inneren Kugel und $r_{2}$ den Radius der äußeren Kugel bezeichnet.
+\begin{verbatim}
+int erfolg = datei_lesen("ui.txt", &rad1, &rad2, &length);
+	if(erfolg != 0) {
+		return erfolg;
+	}
+\end{verbatim}
+Die Methode wird mit den benötigten Parametern (Name der einzulesenden Datei,  Pointer auf ein \emph{float}-Array, in dem die inneren Radien gespeichert werden, Pointer auf ein \emph{float}-Array, in dem die äußeren Radien gespeichert werden, Pointer auf einen \emph{Integer}, in dem die Länge des Datensatzes gespeichert wird) aufgerufen und der Rückgabewert gesichert, der einen eventuell aufgetretenen Fehler spezifiziert ($\neq 0$ bei einem Fehler). Wenn ein Fehler aufgetreten ist wird dies anschließend erkannt und das Programm mit diesem Fehlerwert beendet.\\
+Im folgenden wird auf die Arbeitsweise dieser Methode anhand von weiteren Auszügen aus dem Quelltext eingegangen.
 \begin{verbatim}
 FILE* handle = NULL;
 \end{verbatim}
@@ -135,7 +142,7 @@ Um die Größe des Datensatzes herauszufinden, wird hier der Inhalt der ersten Z
 \end{verbatim}
 Zunächst wird für die inneren (\emph{rad1}) und äußeren (\emph{rad2}) Radien der Kugelkondensatoren des Datensatzes versucht, entsprechend großen Speicher zu allozieren (Länge des Datensatzes multipliziert mit der Größe der Daten selbst, die ja aus \emph{float}s bestehen). Anschließend wird überprüft, ob dieser Vorgang erfolgreich ausgeführt werden konnte, wobei bei einem Fehler ähnliches passiert wie in den vorangehenden Absätzen.
 \\\\
-Die nachfolgende Schleife versucht, die Datei zeilenweise einzulesen und die dabei gewonnenen Daten im passenden Speicherbereich zu sichern. Dabei wird jeweils ähnlich wie zu Beginn der Methode sichergestellt, dass weder das Ende der Datei erreicht noch eine leere Zeile erwischt wurde.
+Die nachfolgende Schleife versucht, die Datei zeilenweise einzulesen und die dabei gewonnenen Daten im passenden Speicherbereich zu sichern. Dabei wird jeweils ähnlich wie zu Beginn der Methode sichergestellt, dass weder das Ende der Datei erreicht noch eine leere Zeile eingelesen wurde.
 \begin{verbatim}
 if(sscanf(line, "%f mm %f mm", (*rad1+index), (*rad2+index)) != 2) {
 			fprintf(stderr, "Fehler in Z. %d: %s\n", index, line);
@@ -143,14 +150,14 @@ if(sscanf(line, "%f mm %f mm", (*rad1+index), (*rad2+index)) != 2) {
 			return 1;
 		}
 \end{verbatim}
-Die Daten in der aktuellen Zeile der Datei werden hier mittels \emph{sscanf} extrahiert und an der entsprechenden Position in den Arrays gespeichert. Die Parameter dieser Funktion verhalten sich dabei ähnlich wie \emph{sprintf}, nur die Funktionsweise ist umgekehrt. Der Rückgabewert ist dabei gleich der erfolgreich ausgelesenen Werte, wenn dieser also nicht \emph{2} ist, was bedeuten würde, dass die aktuelle Zeile ein ungültiges Format hat, wird das Einlesen abgebrochen und eine entsprechende Fehlermeldung ausgegeben. Außerdem werden Gegenmaßnahmen durchgeführt, falls in der Datei zu viele (> \emph{length}, restliche Daten werden ignoriert) oder zu wenige (< \emph{length}, \emph{length} wird entsprechend geändert) Daten zu finden sind.\\
-Nun sollte sichergestellt sein, dass gültige Daten eingelesen wurden, diese werden dann, nachdem genügend großer Speicher für die Ergebnisse alloziert wurde der Assemblerroutine übergeben.
+Die Daten in der aktuellen Zeile der Datei werden hier mittels \emph{sscanf} extrahiert und an der entsprechenden Position in den Arrays gespeichert. Die Parameter dieser Funktion verhalten sich dabei gleich wie \emph{sprintf}, nur die Funktionsweise ist umgekehrt (Werte einlesen statt ausgeben). Der Rückgabewert entspricht dabei den erfolgreich ausgelesenen Werten, wenn dieser also nicht \emph{2} ist, was bedeuten würde, dass die aktuelle Zeile ein ungültiges Format hat, wird das Einlesen abgebrochen und eine entsprechende Fehlermeldung ausgegeben. Außerdem werden Gegenmaßnahmen durchgeführt, falls in der Datei zu viele (> \emph{length}: restliche Daten werden ignoriert) oder zu wenige (< \emph{length}: \emph{length} wird entsprechend geändert) Daten zu finden sind.\\
+Nun sollte sichergestellt sein, dass gültige Daten eingelesen wurden, diese werden dann, nachdem genügend großer Speicher für die Ergebnisse alloziert wurde der Assemblerroutine übergeben. Vorher wird noch der aktuelle Timestamp gespeichert, damit eine Zeitmessung erfolgen kann.
 
-\subsubsection{Assemblerroutine - VFP}
+\subsubsection{Assemblerroutine - VFP-Version}
 %%loop
 %%capacity
 %%TODO
-\subsubsection{Assemblerroutine - NEON und Vektorisierung}
+\subsubsection{Assemblerroutine - NEON-Version}
 %%TODO
 Da wir uns zunächst für eine Implementierung ohne Vektorisierung entschieden haben, haben wir den Aufrufcode nicht an die Vektorisierung angepasst und haben das NEON-Beispiel direkt mittels C-Code angesprochen. 
 \subsubsection{Optimierungen}
