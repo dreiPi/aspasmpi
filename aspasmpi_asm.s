@@ -86,8 +86,8 @@ loop :
 
 	# Zählvariable dekrementieren
 	SUBS r0, r0, #1
-	# SUB mit S aktualisiert N Flag, wodurch ein Über/Unterlauf angezeigt wird
-	# Falls r0 >= 0, also kein Überlauf, mache weiter (springe zurück an Schleifenanfang)
+	# SUB mit S aktualisiert Flags, wodurch ein negatives Ergebnis angezeigt wird
+	# Falls r0 >= 0, also kein negatives Ergebnis, mache weiter (springe zurück an Schleifenanfang)
 	BPL loop
 
 	# Aufräumen
