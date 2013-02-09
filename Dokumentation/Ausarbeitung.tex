@@ -51,20 +51,21 @@ $ C= 4 \pi \varepsilon_{0} \varepsilon_{r} \frac{r_{1} \cdot r_{2}} {r_{2} - r_{
 \end{LARGE} \end{center}
 
 \subsection{Implementierungsumgebung}
-Wir verwenden zur Entwicklung das \board, ein ARM Cortex-A8-System mit NEON-VFP. Die NEON-Architektur erlaubt es, bis zu vier Fließkommazahlen in einem Schritt zu verrechnen, wodurch eine hohe Performanz beim \emph{Number Crunching} erreicht wird. Dieses Verfahren wird \emph{SIMD} genannt.
-\\
-Beispiele für Fließkommaintensive Berechnungen sind Audioverarbeitung, 3D-Visuali-sierungen oder Physik-Simulationen. %% Der Bindestrich hier hindert latex daran, doof zu sein
+Wir verwenden zur Entwicklung das \board, ein ARM Cortex-A8-System (aufbauend auf der ARMv7-Architektur, getaktet mit 1 GHz) mit NEON-VFP. Die NEON-Architektur erlaubt es, Berechnungen mit bis zu vier Fließkommazahlen (32 bit) gleichzeitig durchzuführen, wodurch eine hohe Performanz beim \emph{Number Crunching} erreicht wird. Dieses Verfahren wird \emph{SIMD} (von ARM selbst \emph{Advanced}-SIMD) genannt.\\
+Beispiele für fließkommaintensive Berechnungen sind Audioverarbeitung, 3D-Visuali-sierungen oder Physik-Simulationen.\\
+Weiterhin bietet das \board 512-MB LPDDR RAM, einen High-speed USB 2.0 OTG-Port, 10/100 Ethernet, DVI-D und S-Video-Anschlüsse, Stereo-Audio out/in, einen High-capacity microSD Slot, JTAG und einen Kamera-Port, was enorme Vielfalt in den Erweiterungs- und Anwendungsmöglichkeiten bietet.
 \\ \\
-Unsere Entwicklungsumgebung besteht aus \emph{ARM Development Studio 5 für Eclipse}, \emph{GNU make} und \emph{gcc 4.7}.
+Unsere Entwicklungsumgebung besteht aus dem \emph{ARM Development Studio 5 für Eclipse}, \emph{GNU make} und \emph{gcc 4.7}.
 
-DS-5 ist eine auf Eclipse aufgebaute Umgebung, die eine einfach zu benutzende graphische Oberfläche zum Entwickeln, Ausführen und Debuggen von Programmen für ARM-Systeme bereitstellt. Die Einrichtung ist jedoch etwas umständlich, da DS-5 nicht ganz fehlerfrei ist und keinen klaren Leitfaden zum Erstellen eines Projekts bietet.
+\emph{DS-5} ist eine auf der Entwicklungsplattform Eclipse aufgebaute Umgebung, die eine einfach zu benutzende graphische Oberfläche zum Entwickeln, Ausführen und Debuggen von Programmen für ARM-Systeme bereitstellt. Die Einrichtung ist jedoch etwas umständlich, da DS-5 nicht ganz fehlerfrei ist und keinen klaren Leitfaden zum Erstellen eines Projekts bietet. Das Programm selbst ist kostenpflichtig, sowie nur unter einer eingeschränkten Lizenz distributiert, was eigene Erweiterungen erschwert.
 
-GCC ist eine der weitverbreitesten Compilersuiten, ist vollständig Open-Source und in der Lage, für alle bekannten Architekturen und Betriebssysteme C, C++ und Assemblercode zu Binärcode umzubauen, wobei zusätzlich auch umfangreiche und effektive Optimisierungsoptionen vorhanden sind.
+\emph{GCC} ist eine der weitverbreitesten Compilersuiten, ist vollständig Open-Source und in der Lage, für alle bekannten Architekturen und Betriebssysteme C, C++ und Assemblercode zu Binärcode umzubauen, wobei zusätzlich auch umfangreiche und effektive Optimierungsoptionen vorhanden sind.
 
 \section{Lösungsalternativen}
 \subsection{Vector Floating Point (VFP)}
 \subsubsection*{Vorstellung}
-In der von uns enwickelten Lösung verwenden wir die \emph{Vector Floating Point}-Befehle, diese erlaubt es uns mit Fließkommazahlen zu rechnen.
+In der von uns enwickelten Lösung verwenden wir die Vector Floating Point Erweiterung des ARM-Prozessors. 
+Diese erlaubt es uns mit \emph{single} (32 bit)- und \emph{double} (64 bit)-precision Fließkommazahlen nach dem IEEE 754-Standard zu rechnen.
 \subsubsection*{Vorteile}
 \begin{itemize}
 \item beliebige Menge an zu verarbeitenden Daten
@@ -72,21 +73,22 @@ In der von uns enwickelten Lösung verwenden wir die \emph{Vector Floating Point
 \end{itemize}
 \subsubsection*{Nachteile}
 \begin{itemize}
-\item langsam, da der VFP-Koprozessor nicht voll genutzt wird
+\item eventuell langsamer, da der VFP-Koprozessor (bzw. der NEON-Befehlssatz) nicht voll genutzt wird (d.h. ohne SIMD) oder mehr Taktzyklen für die Berechnung benötigt werden (je nachdem, ob der schnellere \emph{VFPv3}- oder nur der \emph{VFPLite}-Koprozessor vorhanden ist)
+\item VFP-Koprozessor wird benötigt
 \end{itemize}
 \subsection{SIMD (NEON-Coprozessor)}
 \subsubsection*{Vorstellung}
 In dieser alternativen Lösung wird der NEON Coprozessor von ARM verwendet, um von \emph{SIMD} (Single Instruction, Multiple Data)
-zu profitieren. Das bedeutet, dass pro Instruktion nicht mit einer, sondern vier Zahlen gleichzeitig gerechnet werden kann. Unsere Tests haben gezeigt, dass die Berechnung dadurch mindestens um den Faktor 6 beschleunigt wird.
+zu profitieren. Das bedeutet, dass pro Instruktion nicht mit einer, sondern mit bis zu vier Zahlen gleichzeitig gerechnet werden kann. Unsere Tests haben gezeigt, dass die Berechnung dadurch mindestens um den Faktor 6 beschleunigt wird.
 \subsubsection*{Vorteile}
 \begin{itemize}
-\item Um Faktor 6-8 schneller als VFP
+\item Um Faktor 6-8 schneller als VFP ohne SIMD
 \end{itemize}
 \subsubsection*{Nachteile}
 \begin{itemize}
 \item SIMD Befehle müssen jeweils zwei oder vier Fließkommazahlen verarbeiten. Falls die Eingabedatenmenge kein Vielfaches von vier ist, kann für den entsprechenden Rest nicht derselbe Code verwendet werden.
-\item Der NEON Befehlssatz verfügt über keinen Divisionsbefehl. Die einzige Möglichkeit ist eine Annäherung an den Kehrbruch mit \emph{VRECPE} und anschließende Multiplikation.
-Die einmalige Annäherung ist dadurch nicht sehr genau, durch mehrmalige Iteration des Newton-Raphson-Verfahrens mittels \emph{VRECPS} erhält man jedoch größere Genauigkeit.
+\item Der NEON Befehlssatz verfügt über keinen Divisionsbefehl. Die einzige Möglichkeit ist die Approximation des Kehrbruchs mit \emph{VRECPE} und anschließende Multiplikation.
+Die einmalige Annäherung ist nicht sehr genau, durch mehrmalige Iteration des Newton-Raphson-Verfahrens mittels \emph{VRECPS} erhält man jedoch ähnliche Genauigkeit wie mit nicht-SIMD-Operationen.
 \end{itemize}
 \subsection{Entscheidungsprozess}
 Um keine Entscheidung zugunsten einer Lösung treffen zu müssen, haben wir einfach alle Alternativen selbst implementiert, wobei bei der NEON-Variante nur der Berechnungsteil in Assembler umgesetzt wurde, die Schleifenstruktur zur Übergabe der Daten wurde dagegen in C geschrieben.
@@ -98,10 +100,10 @@ Mit diesen Daten werden dann drei verschiedene Implementierungsvarianten ausgef�
 \\\\
 Zunächst werden über die Methode \emph{$datei\_lesen$} die in der Datei \emph{$ui.txt$} stehenden Datensätze eingelesen. Die einzulesende Datei muss dabei folgenden Richtlinien folgen:
 \begin{verse}
-$ $ Zeile 1: $\; \textbf{$n-1$} $ \\
-$ $ Zeile 2: $\; \textbf{$[x_{0}]_{r_{1}}$} \: $mm$ \:\emph{$[x_{0}]_{r_{2}}$} \: $mm$ $ \\
+$ $ Zeile 1: $\; n-1 $ \\
+$ $ Zeile 2: $\; [x_{0}]_{r_{1}} \: $mm$ \: [x_{0}]_{r_{2}} \: $mm$ $ \\
 $ $ $\vdots $\\
-$ $ Zeile n: $\; \textbf{$[x_{n-1}]_{r_{1}}$} \: $mm$ \:\emph{$[x_{n-1}]_{r_{2}}$} \: $mm$ $
+$ $ Zeile n: $\; [x_{n-1}]_{r_{1}} \: $mm$ \: [x_{n-1}]_{r_{2}}\: $mm$ $
 \end{verse}
 Hierbei ist $x$ (mit der Mächtigkeit $\vert x \vert = n$) die Menge aus den zu berechnenden Datensätzen bestehend aus den 2-Tupeln $(r_{1},r_{2})\in \mathbb{R}^{2} $, wobei $r_{1}$ den Radius der inneren Kugel und $r_{2}$ den Radius der äußeren Kugel bezeichnet.
 \\\\
@@ -366,7 +368,7 @@ Die endgültigen Ergebnisse erhält man letztendlich durch Multiplikation mit de
 \end{lstlisting}
 Damit der Aufrufer später auf die Ergebnisse zugreifen kann, müssen diese noch in den richtigen Speicherbereich kopiert werden. Dafür existiert der Befehl \emph{VSTM}, der (ähnlich wie bei \emph{VLDM}) mehrere Werte aus einem NEON-Register in den Speicherbereich, das von einem Standardregister referenziert wird, schreiben kann. Für \emph{result1} (in Register \emph{r3}) funktioniert das ohne Probleme, für \emph{result2}, dessen Pointer gemäß Calling-Convention auf dem Stack übergeben wurde, ist ein weiterer Schritt nötig --- die richtige Adresse muss zunächst vom Stack geholt werden. Anschließend werden die zuvor gesicherten Register und der Stackpointer wieder zurückgeschrieben und es wird mittels \emph{BX} wieder an den Aufrufer (Adresse im Link-Register) zurückgesprungen.
 \subsubsection{Optimierungen}
-Durch Vorberechnung des konstanten Faktors der Formel ($4 \cdot \pi \cdot \varepsilon_{0}$) kann dieser in allen späteren Berechnungen wiederverwendet werden, was einigen Aufwand erspart. Diese Optimierung wurde nur in der VFP-Variante umgesetzt, da hier auch eine Schleifenstruktur implementiert wurde. Bei der NEON-Alternative ist also zusätzliches Optimierungspotential gegeben.\\
+Durch Vorberechnung des konstanten Faktors der Formel ($4 \cdot \pi \cdot \varepsilon_{0}$) kann dieser in allen späteren Berechnungen wiederverwendet werden, was einigen Aufwand erspart. Diese Optimierung wurde nur in der VFP-Variante umgesetzt, da nur hier auch eine Schleifenstruktur implementiert wurde. Bei der NEON-Alternative ist also zusätzliches Optimierungspotential gegeben.\\
 Die effiziente (minimale) Verwendung der verfügbaren Register bietet weiterhin Optimierungsmöglichkeiten. Hier haben wir versucht, den idealen Kompromiss zwischen Effizienz und Lesbarkeit zu finden.\\
 \subsection{Benutzer-Dokumentation}
 %%TODO
