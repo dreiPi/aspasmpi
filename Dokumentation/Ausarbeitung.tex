@@ -17,6 +17,7 @@
 \usepackage{hyperref}
 \usepackage{amsmath}
 \usepackage{amsfonts}
+\usepackage{wrapfig}
 
 \usepackage{listings}
 \lstset{literate=%
@@ -30,6 +31,7 @@
 }
 \lstset{tabsize=4,showspaces=false,language=C}
 
+
 \begin{document}
 
 \sheetHeader{Projektaufgabe \theNumber : \theName}{Gruppe \theGroup:}{\nameM}{\nameE}{\nameC}
@@ -37,11 +39,21 @@
 \section{Problemstellung und Spezifikation}
 
 \subsection{Aufgabenstellung}
+
+\begin{wrapfigure}{r}{0.35\textwidth}
+	\vspace{-20pt}
+	\begin{center}
+	\includegraphics[scale=0.4]{Spherical_Capacitor.png} 
+	\end{center}
+	\vspace{-10pt}
+\end{wrapfigure}
+
 In der von uns bearbeiteten Aufgabe geht es um die Berechnung der Kapazitäten von mehreren Kugelkondensatoren.
+
 
 Ein Kugelkondensator besteht aus zwei konzentrisch angeordneten Kugeln, die durch ein Isoliermaterial, genannt \emph{Dielektrikum}, getrennt werden. Die Kapazität des resultierenden Kondensators hängt von dem Verhältnis der Radien der beiden Kugeln und dem verwendeten Dielektrikum ab.
 
-Dazu wird eine Liste von Radien --- jeweils für den Radius der inneren und der äußeren Kugel --- in Form einer Textdatei eingegeben. Zu dieser werden dann in einem Assemblerprogramm die jeweiligen Kapazitäten für verschiedene Dielektrika berechnet.
+Dazu wird eine Liste von Radien --- jeweils für den Radius der inneren und der äußeren Kugel --- in Form einer Textdatei eingegeben. Zu dieser werden dann in einem Assemblerprogramm die jeweiligen Kapazitäten für verschiedene Dielektrika berechnet (in unserem Fall Hartgummi und Hartpapier).
 Die Abmessungen bestehen jeweils aus zwei Radien, dem der inneren Kugel $r_{1}$ und dem der äußeren Kugel $r_{2}$.
 
 Die Formel zur Berechnung der Kapazität eines Kugelkondensators lautet:
@@ -49,6 +61,8 @@ Die Formel zur Berechnung der Kapazität eines Kugelkondensators lautet:
 \begin{center} \begin{LARGE}
 $ C= 4 \pi \varepsilon_{0} \varepsilon_{r} \frac{r_{1} \cdot r_{2}} {r_{2} - r_{1}} $
 \end{LARGE} \end{center}
+$ \varepsilon_{0} $ bezeichnet dabei die elektrische Feldkonstante und beträgt $8,85418781762 \cdot 10^{-12}$.\\
+$ \varepsilon_{r} $ bezeichnet den Dielektrizitätswert des Materials (für Hartgummi $3,0$, für Hartpapier $5,0$).
 
 \subsection{Implementierungsumgebung}
 Wir verwenden zur Entwicklung das \board, ein ARM Cortex-A8-System (aufbauend auf der ARMv7-Architektur, getaktet mit 1 GHz) mit NEON-VFP. Die NEON-Architektur erlaubt es, Berechnungen mit bis zu vier Fließkommazahlen (32 bit) gleichzeitig durchzuführen, wodurch eine hohe Performanz beim \emph{Number Crunching} erreicht wird. Dieses Verfahren wird \emph{SIMD} (von ARM selbst \emph{Advanced}-SIMD) genannt.\\
@@ -73,7 +87,7 @@ Diese erlaubt es uns mit \emph{single} (32 bit)- und \emph{double} (64 bit)-prec
 \end{itemize}
 \subsubsection*{Nachteile}
 \begin{itemize}
-\item eventuell langsamer, da der VFP-Koprozessor (bzw. der NEON-Befehlssatz) nicht voll genutzt wird (d.h. ohne SIMD) oder mehr Taktzyklen für die Berechnung benötigt werden (je nachdem, ob der schnellere \emph{VFPv3}- oder nur der \emph{VFPLite}-Koprozessor vorhanden ist)
+\item eventuell langsamer, da der VFP-Koprozessor (bzw. der NEON-Befehlssatz) nicht voll genutzt wird (d.h. ohne SIMD) bzw. mehr Taktzyklen für die Berechnung benötigt werden (je nachdem, ob der schnellere \emph{VFPv3}- oder nur der \emph{VFPLite}-Koprozessor vorhanden ist)
 \item VFP-Koprozessor wird benötigt
 \end{itemize}
 \subsection{SIMD (NEON-Coprozessor)}
@@ -387,5 +401,6 @@ Die  Ergebnisse des Assemblercodes mit NEON-Befehlssatz weichen um maximal 0,000
 Für die Berechnung der Kapazitäten von 100000 Wertepaaren benötigt der C-Code im Durchschnitt ca. 25600 µs, der Assemblercode ca. 12800 µs und der Assemblercode mit NEON-Befehlssatz nur ca. 3900µs.Damit ist der Assemblercode ca. 50\% schneller und mit NEON sogar ca. 84\% schneller als der C-Code.
 \subsection{Analyse und Bewertung}
 %%TODO
-
 \end{document}
+
+
