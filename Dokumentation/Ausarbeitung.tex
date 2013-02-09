@@ -207,7 +207,7 @@ if(fclose(handle) != 0) {
 }
 \end{lstlisting}
 
-\subsubsection{Assemblerroutine - VFP-Version}
+\subsubsection{Assemblerroutine -- VFP-Version}
 Der Einstiegspunkt der Assemblerroutine ist die Funktion \emph{\_calc}. Sie erwartet folgende Parameter:
 \begin{enumerate}
 \item 2 \emph{float}-Arrays (\emph{data1}/\emph{data2}), in denen die Abmessungen der Kondensatoren erwartet werden
@@ -324,7 +324,7 @@ Dieser Teil führt die Berechnung der Kapazität aus: Zunächst wird der innere 
 \end{lstlisting}
 Nun werden die verwendeten (und vorher gesicherten) Register wiederhergestellt, der Stackframe zurückgesetzt und mittels \emph{BX} ein Rücksprung zum Aufrufer (bzw. an die im Link-Register gespeicherte Adresse) veranlasst.
 
-\subsubsection{Assemblerroutine - NEON-Version}
+\subsubsection{Assemblerroutine -- NEON-Version}
 
 Da wir uns zunächst für eine Implementierung ohne SIMD-Vektorisierung entschieden haben, haben wir den Assembler-Aufrufcode nicht an die Vektorisierung angepasst und haben die NEON-Alternative direkt mittels C-Code angesprochen. Der C-Code, der zum Aufruf der Funktion benötigt wird, wird hier nicht näher erläutert, da er zum Verständnis keinerlei Erklärung bedarf.
 
@@ -384,22 +384,30 @@ Die endgültigen Ergebnisse erhält man letztendlich durch Multiplikation mit de
 Damit der Aufrufer später auf die Ergebnisse zugreifen kann, müssen diese noch in den richtigen Speicherbereich kopiert werden. Dafür existiert der Befehl \emph{VSTM}, der (ähnlich wie bei \emph{VLDM}) mehrere Werte aus einem NEON-Register in den Speicherbereich, das von einem Standardregister referenziert wird, schreiben kann. Für \emph{result1} (in Register \emph{r3}) funktioniert das ohne Probleme, für \emph{result2}, dessen Pointer gemäß Calling-Convention auf dem Stack übergeben wurde, ist ein weiterer Schritt nötig --- die richtige Adresse muss zunächst vom Stack geholt werden. Anschließend werden die zuvor gesicherten Register und der Stackpointer wieder zurückgeschrieben und es wird mittels \emph{BX} wieder an den Aufrufer (Adresse im Link-Register) zurückgesprungen.
 \subsubsection{Optimierungen}
 Durch Vorberechnung des konstanten Faktors der Formel ($4 \cdot \pi \cdot \varepsilon_{0}$) kann dieser in allen späteren Berechnungen wiederverwendet werden, was einigen Aufwand erspart. Diese Optimierung wurde nur in der VFP-Variante umgesetzt, da nur hier auch eine Schleifenstruktur implementiert wurde. Bei der NEON-Alternative ist also zusätzliches Optimierungspotential gegeben.\\
-Die effiziente (minimale) Verwendung der verfügbaren Register bietet weiterhin Optimierungsmöglichkeiten. Hier haben wir versucht, den idealen Kompromiss zwischen Effizienz und Lesbarkeit zu finden.\\
-\subsection{Benutzer-Dokumentation}
-In dem Ordner in dem die kompilierte Binary liegt, muss der Benutzer eine Datei namens \emph{ui.txt} anlegen. Die erste Zeil der Datei beinhaltet die Größe des Datensatzes. In den folgenden Zeilen stehen die inneren und äußeren Radien der Kugelkondensatoren, deren Kapazitäten berechnet werden sollen. Die folgenden Zeilen sind im Format \emph{Radius1 mm Radius2 mm} (siehe auch die Beschreibung in der Entwicklerdokumentation).
+Die effiziente (minimale) Verwendung der verfügbaren Register bietet weiterhin Optimierungsmöglichkeiten. Hier haben wir versucht, den idealen Kompromiss zwischen Effizienz und Lesbarkeit zu finden.
 
-Um die Kapazitäten zu berechnen muss der Benutzer einfach die Binary ohne weitere Parameter in der Konsole ausführen. Die Ausgabe zeigt nur 4 Ergebnisse: Das erste, an den Stellen 
+\subsection{Benutzer-Dokumentation}
+In dem Ordner, in dem das kompilierte Programm liegt, wird eine Datei namens \emph{ui.txt} erwartet (eine Datei mit Beispielwerten ist bereits vorhanden). Die erste Zeile der Datei enthält die Anzahl der Datensätze. In den folgenden Zeilen stehen die inneren und äußeren Radien der Kugelkondensatoren, deren Kapazitäten zu berechnen ist. Diese Zeilen sind im Format \emph{Radius1 mm Radius2 mm} (siehe auch die Beschreibung in der Entwicklerdokumentation).
+
+Um die Kapazitäten zu berechnen, muss der Benutzer einfach das Programm ohne weitere Parameter in der Konsole ausführen. Die Ausgabe zeigt nur 4 Ergebnisse: Das erste, an den Stellen 
 $n \cdot \frac{1}{3}$ und
 $n \cdot \frac{2}{3}$
-und das letzte Ergebnis (\emph{n} ist dabei die Größe des Datensatzes).
+und das letzte Ergebnis (\emph{n} ist hier die Größe des Datensatzes).
 \section{Ergebnisse}
 \subsection{Vergleich von Assembler und C-Code}
 \subsubsection{Genauigkeit der Ergebnisse}
-Die Ergebnisse des Assemblercodes weichen um maximal 0,000135 Promille von den Ergebnissen des C-Codes ab. Die erzielte Genauigkeit liegt dabei bei 5 Nachkommastellen. Die  Ergebnisse des Assemblercodes mit NEON-Befehlssatz weichen um maximal 0,000225 Promille von den Ergebnissen des C-Codes ab. Die Ergebnisse sind wieder auf 5 Stellen nach dem Komma genau.
+Die Ergebnisse des Assemblercodes weichen um maximal $0,000135$ Promille von den Ergebnissen des C-Codes ab. Die erzielte Genauigkeit liegt dabei bei mindestens 5--6 Nachkommastellen. Die  Ergebnisse des Assemblercodes mit NEON-Befehlssatz weichen um maximal $0,000225$ Promille von den Ergebnissen des C-Codes ab. Die Ergebnisse sind auf 5 Nachkommastellen genau.
 \subsubsection{Laufzeit}
-Für die Berechnung der Kapazitäten von 100000 Wertepaaren benötigt der C-Code im Durchschnitt durchschnittlich 25600µs, der Assemblercode durchschnittlich 12800µs und der Assemblercode mit NEON-Befehlssatz nur durchschnittlich 3900µs. Damit ist der Assemblercode ungefähr 50\% schneller und mit NEON sogar ca. 84\% schneller als der C-Code. Näheres zu den gemessenen Zeiten sowie den Abweichungen kann der beigefügten Datei entnommen werden (dabei muss beachtet werden, dass die Messwerte mangels anderer Testmöglichkeit von einem Samsung Galaxy SIII stammen, auf dem \board ist die Laufzeit im Mittel 4 mal so groß).
+Für die Berechnung der Kapazitäten von 100000 Wertepaaren benötigt der C-Code im Durchschnitt durchschnittlich $25600 \mu s$, der Assemblercode durchschnittlich $12800 \mu s$ und der Assemblercode mit NEON-Befehlssatz nur durchschnittlich $3900 \mu s$.
+
+Damit ist der Assemblercode ungefähr 50\% schneller und mit NEON sogar ca. 84\% schneller als der C-Code.
+
+Näheres zu den gemessenen Zeiten sowie den Abweichungen kann der beigefügten Datei \emph{galaxys3O0.txt} entnommen werden (Hier muss beachtet werden, dass die Messwerte mangels anderer Testmöglichkeit von einem \emph{Samsung Galaxy SIII} stammen, auf dem \board beträgt die Laufzeit im Mittel das vierfache).
+
 \subsection{Analyse und Bewertung}
-Abschließend kann man sagen, dass die NEON-Implementierung zwar mit Abstand am schnellsten ist, dabei jedoch kleine Ungenauigkeiten auftreten, die durch die Tatsache hervorgerufen werden, dass der NEON-Befehlssatz keine direkte Division ermöglicht und man daher mit einer Annäherung an den Kehrbruch arbeiten muss. Da sich die Abweichungen jedoch nicht wirklich bemerkbar machen und die Ergebnisse auf mehrere Stellen genau sind, ist darf diese Implementierung wohl als die annähernd optimale Lösung angesehen werden. 
+Abschließend kann man sagen, dass die NEON-Implementierung zwar mit Abstand am schnellsten ist, dabei jedoch kleine Ungenauigkeiten auftreten, die durch die Tatsache hervorgerufen werden, dass der NEON-Befehlssatz keine direkte Division ermöglicht und man daher mit einer Annäherung an den Kehrbruch arbeiten muss.
+
+Da sich die Abweichungen jedoch nicht wirklich bemerkbar machen und die Genauigkeitsverlust sehr gering ist, darf diese Implementierung wohl als die annähernd optimale Lösung angesehen werden. 
 \end{document}
 
 
