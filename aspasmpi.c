@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <sys/time.h>
 #include <assert.h>
+#include <string.h>
 
 #define MAX_LINE_LENGTH 1024
 
