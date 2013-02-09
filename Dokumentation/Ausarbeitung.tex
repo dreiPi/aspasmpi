@@ -388,11 +388,17 @@ Die effiziente (minimale) Verwendung der verfügbaren Register bietet weiterhin 
 
 \subsection{Benutzer-Dokumentation}
 In dem Ordner, in dem das kompilierte Programm liegt, wird eine Datei namens \emph{ui.txt} erwartet (eine Datei mit Beispielwerten ist bereits vorhanden). Die erste Zeile der Datei enthält die Anzahl der Datensätze. In den folgenden Zeilen stehen die inneren und äußeren Radien der Kugelkondensatoren, deren Kapazitäten zu berechnen ist. Diese Zeilen sind im Format \emph{Radius1 mm Radius2 mm} (siehe auch die Beschreibung in der Entwicklerdokumentation).
+\\\\
+Um die Kapazitäten zu berechnen, muss der Benutzer einfach das Programm in der Konsole ausführen.
 
-Um die Kapazitäten zu berechnen, muss der Benutzer einfach das Programm ohne weitere Parameter in der Konsole ausführen. Die Ausgabe zeigt nur 4 Ergebnisse: Das erste, an den Stellen 
+Falls die Option \emph{debug} angegeben wird, werden nur jeweils vier der berechneten Datensätze ausgegeben: Das erste, an den Stellen 
 $n \cdot \frac{1}{3}$ und
 $n \cdot \frac{2}{3}$
 und das letzte Ergebnis (\emph{n} ist hier die Größe des Datensatzes).
+
+Ohne weitere Parameter werden alle berechneten Ergebnisse ausgegeben.
+
+
 \section{Ergebnisse}
 \subsection{Vergleich von Assembler und C-Code}
 \subsubsection{Genauigkeit der Ergebnisse}
