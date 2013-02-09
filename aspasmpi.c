@@ -51,8 +51,6 @@ void calc_c(float* data1, float* data2, float* result1, float* result2, int leng
 
 // Hauptprogramm
 int main(int argc, char **argv) {
-	int offset = 1;
-	if(argc>0&&strcmp(argv[0],"debug")==0) offset = 3;
 	
 	// Pointer für unsere Arrays freimachen
 	float *rad1, *rad2, *result1, *result2;
@@ -62,6 +60,8 @@ int main(int argc, char **argv) {
 	if(erfolg != 0) {
 		return erfolg;
 	}
+	int offset = length;
+	if(argc>0&&strcmp(argv[0],"debug")==0) offset = 3;
 	// Speicher allokieren
 	result1 = (float*)malloc(length * sizeof(float));
 	result2 = (float*)malloc(length * sizeof(float));
