@@ -63,19 +63,19 @@ GCC ist eine der weitverbreitesten Compilersuiten, ist vollständig Open-Source 
 
 \section{Lösungsalternativen}
 \subsection{Vector Floating Point (VFP)}
-\subsection*{Vorstellung}
+\subsubsection*{Vorstellung}
 In der von uns enwickelten Lösung verwenden wir die \emph{Vector Floating Point}-Befehle, diese erlaubt es uns mit Fließkommazahlen zu rechnen.
-\subsection*{Vorteile}
+\subsubsection*{Vorteile}
 \begin{itemize}
 \item beliebige Menge an zu verarbeitenden Daten
 \item lauffähig auch auf Architekturen ohne NEON
 \end{itemize}
-\subsection*{Nachteile}
+\subsubsection*{Nachteile}
 \begin{itemize}
 \item langsam, da der VFP-Koprozessor nicht voll genutzt wird
 \end{itemize}
 \subsection{SIMD (NEON-Coprozessor)}
-\subsection*{Vorstellung}
+\subsubsection*{Vorstellung}
 In dieser alternativen Lösung wird der NEON Coprozessor von ARM verwendet, um von \emph{SIMD} (Single Instruction, Multiple Data)
 zu profitieren. Das bedeutet, dass pro Instruktion nicht mit einer, sondern vier Zahlen gleichzeitig gerechnet werden kann. Unsere Tests haben gezeigt, dass die Berechnung dadurch mindestens um den Faktor 6 beschleunigt wird.
 \subsubsection*{Vorteile}
@@ -191,21 +191,30 @@ if(!fclose(handle)) {
 \end{lstlisting}
 
 \subsubsection{Assemblerroutine - VFP-Version}
-Der Einstiegspunkt der Assemblerroutine ist die Funktion \emph{\_calc}. Diese erwartet als Parameter 2 \emph{float}-Arrays (data1/data2), die die inneren/äußeren Radien der Kugelkondensatoren beinhalten, 2 \emph{float}-Arrays (result1/result2), in denen die Ergebnisse (also die Kapazitäten der Kondensatoren) für die beiden Dielektrika Hartgummi und -papier gespeichert werden, sowie die Größe des Datensatzes als \emph{Integer} (length).\\
+Der Einstiegspunkt der Assemblerroutine ist die Funktion \emph{\_calc}. Sie erwartet folgende Parameter:
+\begin{enumerate}
+\item 2 \emph{float}-Arrays (\emph{data1}/\emph{data2}), in denen die Abmessungen der Kondensatoren erwartet werden
+\item 2 \emph{float}-Arrays (\emph{result1}/\emph{result2}), in denen die berechneten Kapazitäten für die beiden Dielektrika gespeichert werden
+\item Ein \emph{int} (\emph{length}), der die Größe des Datensatzes angibt
+\end{enumerate}
+
 Im folgenden wird auf die Arbeitsweise dieser Routine anhand von Auszügen aus dem Quellcode näher eingegangen.
 \begin{lstlisting}[language={[x86masm]Assembler}]
 _calc :
 	PUSH {r4-r10,r11}
 \end{lstlisting}
 Hier werden zunächst alle in der Routine verwendeten Register auf dem Stack gesichert, um sie später wiederherstellen zu können.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	ADD r11,sp, #0x1c
 \end{lstlisting}
-Das Register \emph{r11} wird mit einem neuen Stackpointer beschrieben, der für den benötigten Stackframe verwendet wird. Da vorher \emph{7} Words ($7 \cdot 4 = 28$ Byte groß, ausgenommen \emph{r11} selbst) auf den Stack gepusht wurden, wird der referenzierte Speicher um \emph{28} ($_{16}1c$) Bytes erhöht. 
+Das Register \emph{r11} wird mit einem neuen Stackpointer beschrieben, der für den benötigten Stackframe verwendet wird. Da vorher \emph{7} Words ($7 \cdot 4 = 28$ Byte groß, ausgenommen \emph{r11} selbst) auf den Stack gepusht wurden, wird der referenzierte Speicher um \emph{28} ($1c_{16}$) Bytes erhöht. 
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	SUB sp, sp, #20
 \end{lstlisting}
 Vom eigentlichen Stackpointer werden nun \emph{20} Bytes (\emph{5} Words) abgezogen, da dieser Platz später zum Sichern der Parameter benötigt wird.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	STR r0, [r11,#-0x8]
 	STR r1, [r11,#-0xc]
@@ -214,6 +223,7 @@ Vom eigentlichen Stackpointer werden nun \emph{20} Bytes (\emph{5} Words) abgezo
 	PUSH {lr}
 \end{lstlisting}
 Die ersten \emph{4} Parameter (\emph{r0}: data1, \emph{r1}: data2, \emph{r2}: result1, \emph{r3}: result2) werden auf dem Stack gesichert, jeder Kopiervorgang wird dabei mit einem entsprechenden Offset ausgeführt (jeweils um die Größe eines Words vermindert, beim ersten Vorgang ein Word mehr, da sonst der vorher gesicherte Wert von \emph{r11} überschrieben werden würde). Zusätzlich wird das Link-Register (\emph{lr}) auf dem Stack platziert.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	LDR r0, [r11,#4]
 	STR r0, [r11,#-0x18]
@@ -226,6 +236,7 @@ Der \emph{5}. Parameter (\emph{length}) wird gemäß Calling-Convention nicht di
 	LDR r4, [r11,#-0x14]
 \end{lstlisting}
 Hier werden die restlichen Parameter wieder in die benötigten Register geschrieben (\emph{r1}: data1, \emph{r2}: data2, \emph{r3}: result1, \emph{r4}: result2).
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	VLDR.F32 s0, _M_PI
 	VLDR.F32 s3, _M_E_0
@@ -233,7 +244,8 @@ Hier werden die restlichen Parameter wieder in die benötigten Register geschrie
 	VLDR.F32 s3, _M_4
 	VMUL.F32 s3, s0, s3
 \end{lstlisting}
-Nun kann die eigentliche Berechnung beginnen: Der konstante Faktor der Formel ($4 \cdot \pi \cdot \varepsilon_{0}$) wird hier vorberechnet. Dazu werden zunächst der Wert von $\pi$ und $\varepsilon_{0}$ in den Single-Precision-Registern \emph{s0} und \emph{s3} gespeichert, damit mit diesen Werten Fließkomma-Operationen durchgeführt werden können. Anschließend werden diese beiden Zahlen multipliziert und auf ähnliche Weise mit dem Faktor $4$ verrechnet. Das Ergebnis (also der konstante Teil der Formel) steht nun im Register \emph{s3}. Ausgeführt werden all diese (und auch spätere) Befehle mit \emph{32}bit-Fließkommazahlen.
+Nun kann die eigentliche Berechnung beginnen: Der konstante Faktor der Formel ($4 \cdot \pi \cdot \varepsilon_{0}$) wird vorberechnet. Dazu werden zunächst der Wert von $\pi$ und $\varepsilon_{0}$ in den Single-Precision-Registern \emph{s0} und \emph{s3} gespeichert, damit mit diesen Werten Fließkomma-Operationen durchgeführt werden können. Anschließend werden diese beiden Zahlen multipliziert und auf ähnliche Weise mit dem Faktor $4$ verrechnet. Das Ergebnis (also der konstante Teil der Formel) steht nun im Register \emph{s3}. Ausgeführt werden all diese (und auch spätere) Befehle mit \emph{32}bit-Fließkommazahlen.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	SUB r0, r0, #1
 loop :
@@ -243,6 +255,7 @@ loop :
 	ADD r8, r4, r0, LSL #2
 \end{lstlisting}
 Um die richtige Anzahl an Schleifendurchläufen auszuführen, muss von der Größe des Datensatzes (Parameter \emph{length}, in \emph{r0} gespeichert) noch \emph{1} subtrahiert werden, da Arrays ja bekanntlich \emph{0}-basiert sind. Anschließend werden mit einem Label (\emph{loop}) das Beginn der Schleife markiert und die Pointer (für die Eingabe/Ausgabe) an die richtige Position gesetzt. Dafür wird die Zählvariable (\emph{r0}) zunächst mittels \emph{LSL \#2} (Logical Shift Left, entspricht Multiplikation mit $2^{n}$) über den Barrel-Shifter mit $4$ multipliziert, um gültige Speicheroffsets zu bekommen (ein \emph{float} ist \emph{4} Byte groß).
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	VLDR.F32 s0, [r5]
 	VLDR.F32 s1, [r6]
@@ -252,11 +265,13 @@ Um die richtige Anzahl an Schleifendurchläufen auszuführen, muss von der Grö�
 \end{lstlisting}
 Zunächst werden die an den vorher berechneten Speicheradressen stehenden Werte (also der innere/äußere Radius des Kugelkondensators) in die für die Routine \emph{\_capacity} (führt eigentliche Berechnung der Kapazität aus) benötigten Register kopiert und der Dielektrizitätswert für Hartgummi in das richtige Register geladen. Dann wird mittels \emph{BL} ein Sprung zu dieser Routine durchgeführt, wobei die Rücksprungadresse implizit im Link-Register gesichert wird. Ist die Routine fertig, wird das Ergebnis, dass per Konvention in Register \emph{s0} gespeichert wurde, an die richtige Stelle im Ergebnis-Array geschrieben.
 Danach wird dasselbe (mit anderen Speicheradressen) noch einmal für das Dielektrikum Hartpapier durchgeführt.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	SUBS r0, r0, #1
 	BPL loop
 \end{lstlisting} 
 Nach dem Dekrementieren der Zählvariable (mit Operationssuffix \emph{S}, um entsprechende Flags zu aktualisieren), wird, falls die Subtraktion kein negatives Ergebnis verursacht hat (d.h. $r0 >= 0$, angezeigt über die \emph{N}-Flag) wieder an den Schleifenanfang gesprungen und die Datenverarbeitung fortgesetzt.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	POP {lr}
 	SUB sp, r11, #0x1c
@@ -266,6 +281,7 @@ Nach dem Dekrementieren der Zählvariable (mit Operationssuffix \emph{S}, um ent
 Am Ende werden alle (vorher gesicherten) verwendeten Register wiederhergestellt, der Stackframe wiederhergestellt und ein Rücksprung zu der im Link-Register gespeicherten Adresse veranlasst.
 \\\\
 Im folgenden wird die Routine \emph{\_capacity}, die die eigentliche Berechnung der Kapazität durchführt, näher beschrieben. Diese Funktion erwartet als Parameter 4 \emph{float}-Werte (innerer/äußerer Radius, Dielektrizitätswert und konstanter Teil der Formel wie oben erläutert) und liefert das Ergebnis in Register \emph{s0} zurück.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 _capacity :
 	PUSH {r5-r7,r11}
@@ -273,6 +289,7 @@ _capacity :
 	VPUSH {s3-s5}
 \end{lstlisting}
 Ähnlich wie vorangehend beschrieben werden hier die verwendeten Register auf dem Stack gesichert und ein neuer Stackframe erstellt. \emph{VPUSH} sichert hierbei auch die verwendeten VFP-Register.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	VSUB.F32 s4, s1, s0
 	VDIV.F32 s4, s0, s4
@@ -280,18 +297,22 @@ _capacity :
 	VMUL.F32 s0, s3, s2
 	VMUL.F32 s0, s0, s4
 \end{lstlisting}
-Dieser Teil führt die Berechnung der Kapazität aus: Zunächst wird der innere Radius vom äußeren subtrahiert, anschließend mit dem Produkt aus den Radien der Quotient gebildet. Am Schluss wird das noch mit dem konstanten Teil der Formel und dem Dielektrizitätswert multipliziert und das Ergebnis ist fertig berechnet im Register \emph{s0}.
+Dieser Teil führt die Berechnung der Kapazität aus: Zunächst wird der innere Radius vom äußeren subtrahiert, anschließend wird mit dem Produkt aus den Radien der Quotient gebildet. Am Schluss wird das noch mit dem konstanten Teil der Formel und dem Dielektrizitätswert multipliziert, das Ergebnis liegt nun im Register \emph{s0}.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	VPOP {s3-s5}
 	SUB sp, r11, #0xc
 	POP {r5-r7,r11}
 	BX lr
 \end{lstlisting}
-Am Ende werden die verwendeten (und vorher gesicherten) Register wiederhergestellt, der Stackframe zurückgesetzt und mittels \emph{BX} ein Rücksprung zum Aufrufer (bzw. an die im Link-Register gespeicherte Adresse) veranlasst.
+Nun werden die verwendeten (und vorher gesicherten) Register wiederhergestellt, der Stackframe zurückgesetzt und mittels \emph{BX} ein Rücksprung zum Aufrufer (bzw. an die im Link-Register gespeicherte Adresse) veranlasst.
 
 \subsubsection{Assemblerroutine - NEON-Version}
 
-Da wir uns zunächst für eine Implementierung ohne SIMD-Vektorisierung entschieden haben, haben wir den Assembler-Aufrufcode nicht an die Vektorisierung angepasst und haben die NEON-Alternative direkt mittels C-Code angesprochen. Der C-Code, der zum Aufruf der Funktion benötigt wird, wird hier nicht näher erläutert, da er zum Verständnis keinerlei Erklärung bedarf. Die Routine \emph{\_fast\_capacity} berechnet für 4 Kugelkondensatoren die Kapazität mit jeweils 2 Dielektrika und erwartet als Parameter 2 \emph{float}-Arrays der Größe \emph{4}, in denen die inneren/äußeren Radien der zu berechnenden Kugelkondensatoren stehen, ein \emph{2} Elemente großes \emph{float}-Array, in dem die Dielektrizitätswerte stehen und \emph{2} \emph{float}-Arrays, in denen die Ergebnisse gespeichert werden.
+Da wir uns zunächst für eine Implementierung ohne SIMD-Vektorisierung entschieden haben, haben wir den Assembler-Aufrufcode nicht an die Vektorisierung angepasst und haben die NEON-Alternative direkt mittels C-Code angesprochen. Der C-Code, der zum Aufruf der Funktion benötigt wird, wird hier nicht näher erläutert, da er zum Verständnis keinerlei Erklärung bedarf.
+
+Die Routine \emph{\_fast\_capacity} berechnet für 4 Kugelkondensatoren die Kapazität mit jeweils 2 Dielektrika. Sie erwartet --- wie \emph{\_calc} --- als Parameter 2 \emph{float}-Arrays, deren Größe ein vielfaches von \emph{4} ist, hieraus werden die Radien der Kondensatoren gelesen; ein \emph{2} Elemente großes \emph{float}-Array, in dem die Dielektrizitätswerte stehen und \emph{2} \emph{float}-Arrays, in denen die Ergebnisse gespeichert werden.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 _fast_capacity :
 	PUSH {r11}
@@ -301,12 +322,14 @@ _fast_capacity :
 	VLDM r0, {q1}
 	VLDM r1, {q2}
 \end{lstlisting}
-Zu Beginn werden sämtliche verwendeten Register sowie der Stackpointer gesichert und die übergebenen Parameter in die NEON-Register geladen. \emph{VLDM} lädt dabei mehrere Werte in ein entsprechendes Vektorregister (\emph{Q}uad-Register: \emph{4} Werte, \emph{D}ouble-Register: \emph{2} Werte). Die inneren/äußeren Radien befinden sich nun also in den Registern \emph{q1/q2}, die beiden Dielektrizitätswerte im Register \emph{d0}.
+Zu Beginn werden sämtliche verwendeten Register sowie der Stackpointer gesichert und die übergebenen Parameter in die NEON-Register geladen. \emph{VLDM} lädt dabei mehrere Werte in ein entsprechendes Vektorregister (\emph{Q}uad-Register: \emph{4} Werte, \emph{D}ouble-Register: \emph{2} Werte). Die inneren/äußeren Radien befinden sich nun also in den Registern \emph{q1}/\emph{q2}, die beiden Dielektrizitätswerte im Register \emph{d0}.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	VSUB.F32 q4, q2, q1
 	VRECPE.F32 q3, q4
 \end{lstlisting}
 Danach wird mit der eigentlichen Berechnung begonnen, die im folgenden immer mit 4 Werten gleichzeitig operiert. Zunächst wird die Differenz aus den inneren und äußeren Radien gebildet, um dieses Ergebnis anschließend im ersten Schritt der Kehrbruchapproximation zu verwenden, da NEON direkte Division nicht unterstützt. \emph{VRECPE} führt dabei eine bisweilen etwas ungenaue Approximation von $\frac{1}{d}$ (in unserem Fall also $\frac{1}{r2-r1}$) aus, die danach noch weiter präzisiert wird.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	VRECPS.F32 q5, q3, q4
 	VMUL.F32 q3, q5, q3
@@ -314,6 +337,7 @@ Danach wird mit der eigentlichen Berechnung begonnen, die im folgenden immer mit
 	VMUL.F32 q3, q5, q3
 \end{lstlisting}
 Um diesen Kehrbruch ($\frac{1}{d}$) genauer anzunähern, werden hier 2 Schritte der Newton-Raphson-Iteration ($x_{n+1}=x_{n} \cdot (2 - x_{n} \cdot d)$) durchgeführt (als Startwert wird die vorher berechnete Approximation in Register \emph{q3} verwendet), die im NEON-Befehlssatz schon fest eingebaut ist. \emph{VRECPS} errechnet den zweiten Faktor der Formel ($2 - x_{n} \cdot d$), anschließend muss noch mit $x_{n}$ multipliziert werden. Unsere Tests haben ergeben, dass eine zweimalige Durchführung dieser Iteration genügende Genauigkeit ($\approx$ 7 signifikante Stellen) liefert.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	VMUL.F32 q3, q3, q1
 	VMUL.F32 q3, q3, q2
@@ -323,12 +347,14 @@ Um diesen Kehrbruch ($\frac{1}{d}$) genauer anzunähern, werden hier 2 Schritte 
 	VLDR d1, _M_E_0
 	VMUL.F32 q3, q3, d1[0]
 \end{lstlisting}
-Danach wird die Berechnung fortgesetzt mit dem restlichen Teil der Formel. Nach Multiplikation der bisherigen Ergebnisse mit $r1 \cdot r2$ werden anschließend $\pi$ und $4$ in das Register \emph{d1} geladen, um die Zwischenergebnisse mit diesen Skalaren zu multiplizieren. Dasselbe wird mit dem Faktor $\varepsilon_{0}$ gemacht.
+Nach Multiplikation der bisherigen Ergebnisse mit $r1 \cdot r2$ werden anschließend $\pi$ und $4$ in das Register \emph{d1} geladen, um die Zwischenergebnisse mit diesen Skalaren zu multiplizieren. Dasselbe wird mit dem Faktor $\varepsilon_{0}$ gemacht.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	VMUL.F32 q4, q3, d0[0]
 	VMUL.F32 q5, q3, d0[1]
 \end{lstlisting}
 Die endgültigen Ergebnisse erhält man letztendlich durch Multiplikation mit den beiden Dielektrizitätswerten, was hier durchgeführt wird. Anschließend befinden sich die Kapazitäten jeweils in den Registern \emph{q4} für Dielektrizitätswert \emph{1} und \emph{q5} für Dielektrizitätswert \emph{2}.
+\\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 	VSTM r3, {q4}
 	LDR r0, [r11,#0x4]
@@ -338,10 +364,10 @@ Die endgültigen Ergebnisse erhält man letztendlich durch Multiplikation mit de
 	POP {r11}
 	BX lr
 \end{lstlisting}
-Damit der Aufrufer später auf die Ergebnisse zugreifen kann, müssen diese noch in den richtigen Speicherbereich kopiert werden. Dafür existiert der Befehl \emph{VSTM}, der (ähnlich wie bei \emph{VLDM}) mehrere Werte aus einem NEON-Register in den Speicherbereich, das von einem Standardregister referenziert wird schreiben kann. Für \emph{result1} (in Register \emph{r3}) funktioniert das ohne Probleme, für \emph{result2}, dessen Pointer gemäß Calling-Convention auf dem Stack übergeben wurde, ist ein weiterer Schritt nötig - die richtige Adresse muss zunächst vom Stack geholt werden. Anschließend werden die zuvor gesicherten Register und der Stackpointer wieder zurückgeschrieben und es wird mittels \emph{BX} wieder an den Aufrufer (Adresse im Link-Register) zurückgesprungen.
+Damit der Aufrufer später auf die Ergebnisse zugreifen kann, müssen diese noch in den richtigen Speicherbereich kopiert werden. Dafür existiert der Befehl \emph{VSTM}, der (ähnlich wie bei \emph{VLDM}) mehrere Werte aus einem NEON-Register in den Speicherbereich, das von einem Standardregister referenziert wird, schreiben kann. Für \emph{result1} (in Register \emph{r3}) funktioniert das ohne Probleme, für \emph{result2}, dessen Pointer gemäß Calling-Convention auf dem Stack übergeben wurde, ist ein weiterer Schritt nötig --- die richtige Adresse muss zunächst vom Stack geholt werden. Anschließend werden die zuvor gesicherten Register und der Stackpointer wieder zurückgeschrieben und es wird mittels \emph{BX} wieder an den Aufrufer (Adresse im Link-Register) zurückgesprungen.
 \subsubsection{Optimierungen}
 Durch Vorberechnung des konstanten Faktors der Formel ($4 \cdot \pi \cdot \varepsilon_{0}$) kann dieser in allen späteren Berechnungen wiederverwendet werden, was einigen Aufwand erspart. Diese Optimierung wurde nur in der VFP-Variante umgesetzt, da hier auch eine Schleifenstruktur implementiert wurde. Bei der NEON-Alternative ist also zusätzliches Optimierungspotential gegeben.\\
-Die effiziente (minimale) Verwendung der verfügbaren Register bietet weiterhin Optimierungsmöglichkeiten. Hier wurde versucht den idealen Kompromiss zwischen Effizienz und Lesbarkeit zu finden.\\
+Die effiziente (minimale) Verwendung der verfügbaren Register bietet weiterhin Optimierungsmöglichkeiten. Hier haben wir versucht, den idealen Kompromiss zwischen Effizienz und Lesbarkeit zu finden.\\
 \subsection{Benutzer-Dokumentation}
 %%TODO
 \section{Ergebnisse}
