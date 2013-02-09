@@ -17,6 +17,7 @@
 \usepackage{hyperref}
 \usepackage{amsmath}
 \usepackage{amsfonts}
+\usepackage{wrapfig}
 
 \usepackage{listings}
 \lstset{literate=%
@@ -30,6 +31,7 @@
 }
 \lstset{tabsize=4,showspaces=false,language=C}
 
+
 \begin{document}
 
 \sheetHeader{Projektaufgabe \theNumber : \theName}{Gruppe \theGroup:}{\nameM}{\nameE}{\nameC}
@@ -37,12 +39,16 @@
 \section{Problemstellung und Spezifikation}
 
 \subsection{Aufgabenstellung}
-\begin{center}
-\includegraphics[scale=0.4]{Spherical_Capacitor.png} 
-\end{center}
+
+\begin{wrapfigure}{r}{0.35\textwidth}
+	\vspace{-20pt}
+	\begin{center}
+	\includegraphics[scale=0.4]{Spherical_Capacitor.png} 
+	\end{center}
+	\vspace{-10pt}
+\end{wrapfigure}
 
 In der von uns bearbeiteten Aufgabe geht es um die Berechnung der Kapazitäten von mehreren Kugelkondensatoren.
-
 
 
 Ein Kugelkondensator besteht aus zwei konzentrisch angeordneten Kugeln, die durch ein Isoliermaterial, genannt \emph{Dielektrikum}, getrennt werden. Die Kapazität des resultierenden Kondensators hängt von dem Verhältnis der Radien der beiden Kugeln und dem verwendeten Dielektrikum ab.
