@@ -51,6 +51,9 @@ void calc_c(float* data1, float* data2, float* result1, float* result2, int leng
 
 // Hauptprogramm
 int main(int argc, char **argv) {
+	int offset = 1;
+	if(argc>0&&strcmp(argv[0],"debug")==0) offset = 3;
+	
 	// Pointer für unsere Arrays freimachen
 	float *rad1, *rad2, *result1, *result2;
 	int length;
@@ -77,10 +80,10 @@ int main(int argc, char **argv) {
 
 	printf("ARM: time needed: %f usec \n", utimediff);
 
-	// das erste, 1/3ste, 2/3ste und letzte Ergebnis ausgeben
+	// Ergebnisse ausgeben
 	printf("Ergebnisse der Assemblerimplementierung: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
-	for(int i=0; i<length; i+=length/3) {
+	for(int i=0; i<length; i+=length/offset) {
 		printf("%8d: %1.8e %1.8e %1.8e %1.8e\n", i,
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
@@ -98,10 +101,10 @@ int main(int argc, char **argv) {
 
 	printf("NEON: time needed: %f usec \n", utimediff);
 
-	// das erste, 1/3ste, 2/3ste und letzte Ergebnis ausgeben
+	// Ergebnisse ausgeben
 	printf("Ergebnisse der NEON-Implementierung: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
-	for(int i=0; i<length; i+=length/3) {
+	for(int i=0; i<length; i+=length/offset) {
 		printf("%8d: %1.8e %1.8e %1.8e %1.8e\n", i,
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
@@ -117,7 +120,7 @@ int main(int argc, char **argv) {
 
 	printf("Ergebnisse der Referenzimplementierung: \n");
 	printf("index     r1             r2             k_gummi        k_papier\n");
-	for(int i=0; i<length; i+=length/3) {
+	for(int i=0; i<length; i+=length/offset) {
 		printf("%8d: %1.8e %1.8e %1.8e %1.8e\n", i,
 				rad1[i],rad2[i],result1[i],result2[i]);
 	}
