@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <sys/time.h>
 #include <assert.h>
+#include <string.h>
 
 #define MAX_LINE_LENGTH 1024
 
@@ -61,7 +62,7 @@ int main(int argc, char **argv) {
 		return erfolg;
 	}
 	int offset = length;
-	if(argc>0&&strcmp(argv[0],"debug")==0) offset = 3;
+	if(argc>1&&strcmp(argv[1],"debug")==0) offset = 3;
 	// Speicher allokieren
 	result1 = (float*)malloc(length * sizeof(float));
 	result2 = (float*)malloc(length * sizeof(float));
