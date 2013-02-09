@@ -52,7 +52,7 @@ $ C= 4 \pi \varepsilon_{0} \varepsilon_{r} \frac{r_{1} \cdot r_{2}} {r_{2} - r_{
 
 \subsection{Implementierungsumgebung}
 Wir verwenden zur Entwicklung das \board, ein ARM Cortex-A8-System (aufbauend auf der ARMv7-Architektur, getaktet mit 1 GHz) mit NEON-VFP. Die NEON-Architektur erlaubt es, Berechnungen mit bis zu vier Fließkommazahlen (32 bit) gleichzeitig durchzuführen, wodurch eine hohe Performanz beim \emph{Number Crunching} erreicht wird. Dieses Verfahren wird \emph{SIMD} (von ARM selbst \emph{Advanced}-SIMD) genannt.\\
-Beispiele für fließkommaintensive Berechnungen sind Audioverarbeitung, 3D-Visualisierungen oder Physik-Simulationen.\\
+Beispiele für fließkommaintensive Berechnungen sind Audioverarbeitung, 3D-Visuali-sierungen oder Physik-Simulationen.\\
 Weiterhin bietet das \board 512-MB LPDDR RAM, einen High-speed USB 2.0 OTG-Port, 10/100 Ethernet, DVI-D und S-Video-Anschlüsse, Stereo-Audio out/in, einen High-capacity microSD Slot, JTAG und einen Kamera-Port, was enorme Vielfalt in den Erweiterungs- und Anwendungsmöglichkeiten bietet.
 \\ \\
 Unsere Entwicklungsumgebung besteht aus dem \emph{ARM Development Studio 5 für Eclipse}, \emph{GNU make} und \emph{gcc 4.7}.
@@ -64,7 +64,7 @@ Unsere Entwicklungsumgebung besteht aus dem \emph{ARM Development Studio 5 für 
 \section{Lösungsalternativen}
 \subsection{Vector Floating Point (VFP)}
 \subsection*{Vorstellung}
-In der von uns enwickelten Lösung verwenden wir die Vector Floating Point Erweiterung das ARM-Prozessors. 
+In der von uns enwickelten Lösung verwenden wir die Vector Floating Point Erweiterung des ARM-Prozessors. 
 Diese erlaubt es uns mit \emph{single} (32 bit)- und \emph{double} (64 bit)-precision Fließkommazahlen nach dem IEEE 754-Standard zu rechnen.
 \subsection*{Vorteile}
 \begin{itemize}
@@ -77,13 +77,14 @@ Diese erlaubt es uns mit \emph{single} (32 bit)- und \emph{double} (64 bit)-prec
 \item VFP-Koprozessor wird benötigt
 \end{itemize}
 \subsection{SIMD (NEON-Coprozessor)}
-In dieser alternativen Lösung wird der NEON Koprozessor von ARM verwendet, um von \emph{SIMD} (Single Instruction, Multiple Data)
-zu profitieren. Das bedeutet, dass pro Assemblerbefehl nicht mit einem, sondern mit bis zu vier Zahlen gleichzeitig gerechnet werden kann. Unsere Tests haben gezeigt, dass dadurch die Berechnung mindestens um den Faktor 6 beschleunigt wird.
-\subsubsection{Vorteile}
+\subsection*{Vorstellung}
+In dieser alternativen Lösung wird der NEON Coprozessor von ARM verwendet, um von \emph{SIMD} (Single Instruction, Multiple Data)
+zu profitieren. Das bedeutet, dass pro Instruktion nicht mit einer, sondern mit bis zu vier Zahlen gleichzeitig gerechnet werden kann. Unsere Tests haben gezeigt, dass die Berechnung dadurch mindestens um den Faktor 6 beschleunigt wird.
+\subsubsection*{Vorteile}
 \begin{itemize}
 \item Um Faktor 6-8 schneller als VFP ohne SIMD
 \end{itemize}
-\subsubsection{Nachteile}
+\subsubsection*{Nachteile}
 \begin{itemize}
 \item SIMD Befehle müssen jeweils zwei oder vier Fließkommazahlen verarbeiten. Falls die Eingabedatenmenge kein Vielfaches von vier ist, kann für den entsprechenden Rest nicht derselbe Code verwendet werden.
 \item Der NEON Befehlssatz verfügt über keinen Divisionsbefehl. Die einzige Möglichkeit ist die Approximation des Kehrbruchs mit \emph{VRECPE} und anschließende Multiplikation.
@@ -104,8 +105,18 @@ $ $ Zeile 2: $\; [x_{0}]_{r_{1}} \: $mm$ \: [x_{0}]_{r_{2}} \: $mm$ $ \\
 $ $ $\vdots $\\
 $ $ Zeile n: $\; [x_{n-1}]_{r_{1}} \: $mm$ \: [x_{n-1}]_{r_{2}}\: $mm$ $
 \end{verse}
-Hierbei ist $x$ (mit der Mächtigkeit $\vert x \vert = n$) die Menge aus den zu berechnenden Datensätzen bestehend aus den 2-Tupeln $(r_{1},r_{2})\in \mathbb{R}^{2} $, wobei $r_{1}$ den Radius der inneren Kugel und $r_{2}$ den Radius der äußeren Kugel bezeichnet.\\\\
-Die Methode wird mit den benötigten Parametern (Name der einzulesenden Datei,  Pointer auf ein \emph{float}-Array, in dem die inneren Radien gespeichert werden, Pointer auf ein \emph{float}-Array, in dem die äußeren Radien gespeichert werden, Pointer auf einen \emph{Integer}, in dem die Länge des Datensatzes gespeichert wird) aufgerufen und der Rückgabewert gesichert, der einen eventuell aufgetretenen Fehler spezifiziert ($\neq 0$ bei einem Fehler). Wenn ein Fehler aufgetreten ist wird dies anschließend erkannt und das Programm mit diesem Fehlerwert beendet.
+Hierbei ist $x$ (mit der Mächtigkeit $\vert x \vert = n$) die Menge aus den zu berechnenden Datensätzen bestehend aus den 2-Tupeln $(r_{1},r_{2})\in \mathbb{R}^{2} $, wobei $r_{1}$ den Radius der inneren Kugel und $r_{2}$ den Radius der äußeren Kugel bezeichnet.
+\\\\
+Die Methode wird mit den benötigten Parametern aufgerufen und der Rückgabewert gesichert. Dieser spezifiziert einen eventuell aufgetretenen Fehler ($\neq 0$ bei einem Fehler). Wenn ein Fehler aufgetreten ist wird dies anschließend erkannt und das Programm mit diesem Fehlerwert beendet.
+
+Die Parameter von \emph{$datei\_lesen$} lauten wie folgt:
+\begin{enumerate}
+\item Name der einzulesenden Datei
+\item Pointer auf ein \emph{float}-Array, in dem die inneren Radien gespeichert werden
+\item Pointer auf ein \emph{float}-Array, in dem die äußeren Radien gespeichert werden
+\item Pointer auf einen \emph{int}, hier wird die Länge des Datensatzes gespeichert
+\end{enumerate}
+
 \begin{lstlisting}
 int erfolg = datei_lesen("ui.txt", &rad1, &rad2, &length);
 if(erfolg != 0) {
@@ -113,15 +124,18 @@ if(erfolg != 0) {
 }
 \end{lstlisting}
 Im folgenden wird auf die Arbeitsweise dieser Methode anhand von weiteren Auszügen aus dem Quelltext eingegangen.\\\\
-Erzeugt eine Variable namens \emph{$handle$}, in der ein Pointer auf ein \emph{$FILE$}-Struct, definiert in der Headerdatei \emph{$stdio.h$} (Teil der Standard-C-Bibliotheken) gespeichert werden kann. Damit wird ein späterer Zugriff auf die einzulesende Datei ermöglicht. Zunächst wird die Variable aber auf \emph{$NULL$} gesetzt, weil noch keine Datei geöffnet wurde.
+
 \begin{lstlisting}[language=C]
 FILE* handle = NULL;
 \end{lstlisting}
-Erzeugt eine Variable namens \emph{$line$}, in der ein Array der Größe \emph{$MAX\_LINE\_LENGTH$} (als \emph{1024} definiert) mit Elementen vom Typ \emph{$char$} gespeichert wird. Benötigt wird diese Variable zum Speichern des Inhalts der aktuellen Zeile in der einzulesenden Datei.
+Erzeugt eine Variable namens \emph{$handle$}, in der ein Pointer auf ein \emph{$FILE$}-Struct, definiert in der Headerdatei \emph{$stdio.h$} (Teil der Standard-C-Bibliotheken) gespeichert werden kann. Damit wird ein späterer Zugriff auf die einzulesende Datei ermöglicht. Zunächst wird die Variable aber auf \emph{$NULL$} gesetzt, weil noch keine Datei geöffnet wurde.
+
+
 \begin{lstlisting}[language=C]
 char line[MAX_LINE_LENGTH];
 \end{lstlisting}
-Mit \emph{fopen} wird versucht die Datei, die unter dem Pfad spezifiziert vom Parameter \emph{filename} zu finden ist, im Lesemodus (deshalb das \emph{"r"} als zweiter Parameter) zu öffnen und anschließend eine Zugriffsreferenz für die spätere Verwendung unter der vorher definierten Variable \emph{handle} zu sichern. Schlägt dies fehl, d.h. \emph{handle} hat den Wert \emph{0}, wird eine entsprechende Ausgabe an den systemweiten Error-Stream gesendet und die Methode mit dem Rückgabewert \emph{1} abgebrochen.
+Erzeugt eine Variable namens \emph{$line$}, in der ein Array der Größe \emph{MAX\_LINE\_LENGTH} (als \emph{1024} definiert) mit Elementen vom Typ \emph{$char$} gespeichert wird. Benötigt wird diese Variable zum Speichern des Inhalts der aktuellen Zeile in der einzulesenden Datei.
+\\\\
 \begin{lstlisting}[language=C]
 handle = fopen(filename, "r");
 if(!handle) {
@@ -129,14 +143,16 @@ if(!handle) {
 	return 1; 
 }
 \end{lstlisting}
-Hier wird überprüft, ob es sich bei der einzulesenden Datei um eine leere Datei handelt bzw. von der Datei überhaupt gelesen werden kann. Zunächst wird mittels \emph{feof} sichergestellt, dass das Ende des Dateistreams noch nicht erreicht ist, um anschließend zu überprüfen ob die erste Zeile gelesen werden kann. Die Methode \emph{fgets} erwartet hierbei einen Pointer auf ein \emph{char}-Array (\emph{line}), in das bei einem erfolgreichen Lesevorgang die nächsten \emph{1024} (\emph{MAX\_LINE\_LENGTH}) Zeichen des Streams \emph{handle} geschrieben werden. Schlägt einer der Tests fehl, wird wiederum eine entsprechende Ausgabe an den systemweiten Error-Stream gesendet und die Methode mit dem Rückgabewert \emph{1} abgebrochen.
+Mit \emph{fopen} wird versucht die Datei, die unter dem Pfad spezifiziert vom Parameter \emph{filename} zu finden ist, im Lesemodus (deshalb das \emph{"r"} als zweiter Parameter) zu öffnen und anschließend eine Zugriffsreferenz für die spätere Verwendung unter der vorher definierten Variable \emph{handle} zu sichern. Schlägt dies fehl, d.h. \emph{handle} hat den Wert \emph{0}, wird eine entsprechende Ausgabe an den systemweiten Error-Stream gesendet und die Methode mit dem Rückgabewert \emph{1} abgebrochen.
+\\\\
 \begin{lstlisting}[language=C]
 if(feof(handle) || fgets(line, MAX_LINE_LENGTH, handle)==NULL) {
 	fprintf(stderr,"Fehler: Datei ist leer\n");
 	return 1;
 }
 \end{lstlisting}
-Um die Größe des Datensatzes herauszufinden, wird hier der Inhalt der ersten Zeile mittels \emph{atoi} in einen \emph{Integer} umgewandelt, der dann im vom Parameter \emph{length} referenzierten Speicher gesichert wird. Um fehlerhafte Daten auszuschließen, wird danach überprüft, ob es sich eine sinnvolle Länge handelt ($>0$). Ist dies nicht der Fall wird eine entsprechende Fehlermeldung ausgegeben und die Methode mit dem Rückgabewert \emph{1} abgebrochen.
+Hier wird überprüft, ob es sich bei der einzulesenden Datei um eine leere Datei handelt bzw. von der Datei überhaupt gelesen werden kann. Zunächst wird mittels \emph{feof} sichergestellt, dass das Ende des Dateistreams noch nicht erreicht ist, um anschließend zu überprüfen ob die erste Zeile gelesen werden kann. Die Methode \emph{fgets} erwartet hierbei einen Pointer auf ein \emph{char}-Array (\emph{line}), in das bei einem erfolgreichen Lesevorgang die nächsten \emph{1024} (\emph{MAX\_LINE\_LENGTH}) Zeichen des Streams \emph{handle} geschrieben werden. Schlägt einer der Tests fehl, wird wiederum eine entsprechende Ausgabe an den systemweiten Error-Stream gesendet und die Methode mit dem Rückgabewert \emph{1} abgebrochen.
+\\\\
 \begin{lstlisting}[language=C]
 *length = atoi(line);
 if(*length <= 0) {
@@ -144,7 +160,8 @@ if(*length <= 0) {
 	return 1;
 }
 \end{lstlisting}
-Zunächst wird für die inneren (\emph{rad1}) und äußeren (\emph{rad2}) Radien der Kugelkondensatoren des Datensatzes versucht, entsprechend großen Speicher zu allozieren (Länge des Datensatzes multipliziert mit der Größe der Daten selbst, die ja aus \emph{float}s bestehen). Anschließend wird überprüft, ob dieser Vorgang erfolgreich ausgeführt werden konnte, wobei bei einem Fehler ähnliches passiert wie in den vorangehenden Absätzen.
+Um die Größe des Datensatzes herauszufinden, wird hier der Inhalt der ersten Zeile mittels \emph{atoi} in einen \emph{Integer} umgewandelt, der dann im vom Parameter \emph{length} referenzierten Speicher gesichert wird. Um fehlerhafte Daten auszuschließen, wird danach überprüft, ob es sich eine sinnvolle Länge handelt ($>0$). Ist dies nicht der Fall wird eine entsprechende Fehlermeldung ausgegeben und die Methode mit dem Rückgabewert \emph{1} abgebrochen.
+\\\\
 \begin{lstlisting}[language=C]
 *rad1 = (float*)malloc(*length * sizeof(float));
 *rad2 = (float*)malloc(*length * sizeof(float));
@@ -153,9 +170,10 @@ if(!rad1 || !rad2) {
 	return 1;
 }
 \end{lstlisting}
-Die nachfolgende Schleife versucht, die Datei zeilenweise einzulesen und die dabei gewonnenen Daten im passenden Speicherbereich zu sichern. Dabei wird jeweils ähnlich wie zu Beginn der Methode sichergestellt, dass weder das Ende der Datei erreicht noch eine leere Zeile eingelesen wurde.\\\\
-Die Daten in der aktuellen Zeile der Datei werden hier mittels \emph{sscanf} extrahiert und an der entsprechenden Position in den Arrays gespeichert. Die Parameter dieser Funktion verhalten sich dabei gleich wie \emph{sprintf}, nur die Funktionsweise ist umgekehrt (Werte werden eingelesen statt ausgegeben). Der Rückgabewert entspricht dabei den erfolgreich ausgelesenen Werten, wenn dieser also nicht \emph{2} ist, was bedeuten würde, dass die aktuelle Zeile ein ungültiges Format hat, wird das Einlesen abgebrochen und eine entsprechende Fehlermeldung ausgegeben. Außerdem werden Gegenmaßnahmen durchgeführt, falls in der Datei zu viele (> \emph{length}: restliche Daten werden ignoriert) oder zu wenige (< \emph{length}: \emph{length} wird entsprechend geändert) Daten zu finden sind.\\
-Abschließend wird die geöffnete Datei noch mittels \emph{fclose} geschlossen und ein Fehler ausgegeben, falls sie nicht geschlossen werden konnte.
+Zunächst wird für die inneren (\emph{rad1}) und äußeren (\emph{rad2}) Radien der Kugelkondensatoren des Datensatzes versucht, entsprechend großen Speicher zu allozieren (Länge des Datensatzes multipliziert mit der Größe der Daten selbst, die ja aus \emph{float}s bestehen). Anschließend wird überprüft, ob dieser Vorgang erfolgreich ausgeführt werden konnte, wobei bei einem Fehler ähnliches passiert wie in den vorangehenden Absätzen.
+\\\\
+Die nachfolgende Schleife versucht, die Datei zeilenweise einzulesen und die dabei gewonnenen Daten im passenden Speicherbereich zu sichern. Dabei wird jeweils ähnlich wie zu Beginn der Methode sichergestellt, dass weder das Ende der Datei erreicht noch eine leere Zeile eingelesen wurde.
+\\\\
 \begin{lstlisting}[language=C]
 if(sscanf(line, "%f mm %f mm", (*rad1+index), (*rad2+index)) != 2) {
 	fprintf(stderr, "Fehler in Z. %d: %s\n", index, line);
@@ -163,9 +181,11 @@ if(sscanf(line, "%f mm %f mm", (*rad1+index), (*rad2+index)) != 2) {
 	return 1;
 }
 \end{lstlisting}
-
+Die Daten in der aktuellen Zeile der Datei werden hier mittels \emph{sscanf} extrahiert und an der entsprechenden Position in den Arrays gespeichert. Die Parameter dieser Funktion verhalten sich dabei gleich wie \emph{sprintf}, nur die Funktionsweise ist umgekehrt (Werte werden eingelesen statt ausgegeben). Der Rückgabewert entspricht dabei den erfolgreich ausgelesenen Werten, wenn dieser also nicht \emph{2} ist, was bedeuten würde, dass die aktuelle Zeile ein ungültiges Format hat, wird das Einlesen abgebrochen und eine entsprechende Fehlermeldung ausgegeben. Außerdem werden Gegenmaßnahmen durchgeführt, falls in der Datei zu viele (> \emph{length}: restliche Daten werden ignoriert) oder zu wenige (< \emph{length}: \emph{length} wird entsprechend geändert) Daten zu finden sind.
+\\\\
 Nun sollte sichergestellt sein, dass gültige Daten eingelesen wurden, diese werden dann, nachdem genügend großer Speicher für die Ergebnisse alloziert wurde der Assemblerroutine übergeben. Vorher wird noch der aktuelle Timestamp gespeichert, damit eine Zeitmessung erfolgen kann. Nachdem die Berechnung erfolgt ist, werden Auszüge aus den Ergebnissen ausgegeben sowie die benötigte Zeit.
-
+\\\\
+Abschließend wird die geöffnete Datei noch mittels \emph{fclose} geschlossen und ein Fehler ausgegeben, falls sie nicht geschlossen werden konnte.
 \begin{lstlisting}[language=C]
 if(!fclose(handle)) {
 	fprintf(stderr, "Fehler: Konnte Eingabedatei nicht schließen.\n");
