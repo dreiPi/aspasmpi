@@ -311,7 +311,7 @@ Nun werden die verwendeten (und vorher gesicherten) Register wiederhergestellt, 
 
 Da wir uns zunächst für eine Implementierung ohne SIMD-Vektorisierung entschieden haben, haben wir den Assembler-Aufrufcode nicht an die Vektorisierung angepasst und haben die NEON-Alternative direkt mittels C-Code angesprochen. Der C-Code, der zum Aufruf der Funktion benötigt wird, wird hier nicht näher erläutert, da er zum Verständnis keinerlei Erklärung bedarf.
 
-Die Routine \emph{\_fast\_capacity} berechnet für 4 Kugelkondensatoren die Kapazität mit jeweils 2 Dielektrika. Sie erwartet --- wie \emph{\_calc} --- als Parameter 2 \emph{float}-Arrays, deren Größe ein vielfaches von \emph{4} ist, hieraus werden die Radien der Kondensatoren gelesen; ein \emph{2} Elemente großes \emph{float}-Array, in dem die Dielektrizitätswerte stehen und \emph{2} \emph{float}-Arrays, in denen die Ergebnisse gespeichert werden.
+Die Routine \emph{\_fast\_capacity} berechnet für 4 Kugelkondensatoren die Kapazität mit jeweils 2 Dielektrika. Sie erwartet --- wie \emph{\_calc} --- als Parameter 2 \emph{float}-Arrays mit Mindestgröße 4, hieraus werden die Radien der Kondensatoren gelesen; ein \emph{2} Elemente großes \emph{float}-Array, in dem die Dielektrizitätswerte stehen und \emph{2} \emph{float}-Arrays, in denen die Ergebnisse gespeichert werden.
 \\
 \begin{lstlisting}[language={[x86masm]Assembler}]
 _fast_capacity :
