@@ -400,7 +400,7 @@ Die  Ergebnisse des Assemblercodes mit NEON-Befehlssatz weichen um maximal 0,000
 \subsubsection{Laufzeit}
 Für die Berechnung der Kapazitäten von 100000 Wertepaaren benötigt der C-Code im Durchschnitt ca. 25600 µs, der Assemblercode ca. 12800 µs und der Assemblercode mit NEON-Befehlssatz nur ca. 3900µs.Damit ist der Assemblercode ca. 50\% schneller und mit NEON sogar ca. 84\% schneller als der C-Code.
 \subsection{Analyse und Bewertung}
-%%TODO
+Abschließend kann man sagen, dass die NEON-Implementierung zwar mit Abstand am schnellsten ist. Jedoch treten kleine Ungenauigkeiten auf, die durch die Tatsache hervorgerufen werden, dass der NEON-Befehlssatz keine direkte Division ermöglicht und man mit einer Annäherung an den Kehrbruch arbeiten muss. Da sich die Abweichungen jedoch nicht wirklich bemerkbar machen und die Ergebnisse auf mehrere Stellen genau sind, ist diese Implementieren wohl die am geeignetsten. 
 \end{document}
 
 
