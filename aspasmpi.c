@@ -201,7 +201,7 @@ int datei_lesen(char* filename, float** rad1, float** rad2, int* length) {
 	}
 	
 	// Datei-Handle schlieﬂen 
-	if(!fclose(handle)) {
+	if(fclose(handle) != 0) {
 		fprintf(stderr, "Fehler: Konnte Eingabedatei nicht schlieﬂen.\n");
 	}
 	
