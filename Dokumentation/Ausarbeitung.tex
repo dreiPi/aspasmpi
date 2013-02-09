@@ -386,22 +386,20 @@ Damit der Aufrufer später auf die Ergebnisse zugreifen kann, müssen diese noch
 Durch Vorberechnung des konstanten Faktors der Formel ($4 \cdot \pi \cdot \varepsilon_{0}$) kann dieser in allen späteren Berechnungen wiederverwendet werden, was einigen Aufwand erspart. Diese Optimierung wurde nur in der VFP-Variante umgesetzt, da nur hier auch eine Schleifenstruktur implementiert wurde. Bei der NEON-Alternative ist also zusätzliches Optimierungspotential gegeben.\\
 Die effiziente (minimale) Verwendung der verfügbaren Register bietet weiterhin Optimierungsmöglichkeiten. Hier haben wir versucht, den idealen Kompromiss zwischen Effizienz und Lesbarkeit zu finden.\\
 \subsection{Benutzer-Dokumentation}
-In dem Ordner in dem die kompilierte Binary liegt, muss der Benutzer eine \emph{ui.txt} anlegen. In der ersten Zeile steht die Anzahl der Zeilen der Datei minus eins. In den folgenden Zeilen stehen die inneren und äußeren Radien der Kugenkondensatoren, deren Kapazitäten berechnet werden sollen. Die folgenden Zeilen sind im Format \emph{Radius1 mm Radius2 mm} .
+In dem Ordner in dem die kompilierte Binary liegt, muss der Benutzer eine Datei namens \emph{ui.txt} anlegen. Die erste Zeil der Datei beinhaltet die Größe des Datensatzes. In den folgenden Zeilen stehen die inneren und äußeren Radien der Kugelkondensatoren, deren Kapazitäten berechnet werden sollen. Die folgenden Zeilen sind im Format \emph{Radius1 mm Radius2 mm} (siehe auch die Beschreibung in der Entwicklerdokumentation).
 
-Um die Kapazitäten zu berechnen muss der Benuter einfach die Binary ohne weitere Parameter in der Konsole ausführen. Die Ausgabe zeigt nur 4 Ergebnisse: Das erste, die an den Stellen 
-$n * \frac{1}{3}$ und
-$n * \frac{2}{3}$
-und das letzte Ergebnis. Wobei \emph{n} die Anzahl der Werte ist.
+Um die Kapazitäten zu berechnen muss der Benutzer einfach die Binary ohne weitere Parameter in der Konsole ausführen. Die Ausgabe zeigt nur 4 Ergebnisse: Das erste, an den Stellen 
+$n \cdot \frac{1}{3}$ und
+$n \cdot \frac{2}{3}$
+und das letzte Ergebnis (\emph{n} ist dabei die Größe des Datensatzes).
 \section{Ergebnisse}
 \subsection{Vergleich von Assembler und C-Code}
 \subsubsection{Genauigkeit der Ergebnisse}
-Die Ergebnisse des Assemblercodes weichen um maximal 0,000135 Promille von den Ergebnissen des C-Codes ab. Das heißt die Ergebnisse sind auf 5 Stellen nach dem Komma genau.
-
-Die  Ergebnisse des Assemblercodes mit NEON-Befehlssatz weichen um maximal 0,000225 Promille von den Ergebnissen des C-Codes ab. Die Ergebnisse sind wieder auf 5 Stellen nach dem Komma genau.
+Die Ergebnisse des Assemblercodes weichen um maximal 0,000135 Promille von den Ergebnissen des C-Codes ab. Die erzielte Genauigkeit liegt dabei bei 5 Nachkommastellen. Die  Ergebnisse des Assemblercodes mit NEON-Befehlssatz weichen um maximal 0,000225 Promille von den Ergebnissen des C-Codes ab. Die Ergebnisse sind wieder auf 5 Stellen nach dem Komma genau.
 \subsubsection{Laufzeit}
-Für die Berechnung der Kapazitäten von 100000 Wertepaaren benötigt der C-Code im Durchschnitt ca. 25600 µs, der Assemblercode ca. 12800 µs und der Assemblercode mit NEON-Befehlssatz nur ca. 3900µs.Damit ist der Assemblercode ca. 50\% schneller und mit NEON sogar ca. 84\% schneller als der C-Code.
+Für die Berechnung der Kapazitäten von 100000 Wertepaaren benötigt der C-Code im Durchschnitt durchschnittlich 25600µs, der Assemblercode durchschnittlich 12800µs und der Assemblercode mit NEON-Befehlssatz nur durchschnittlich 3900µs. Damit ist der Assemblercode ungefähr 50\% schneller und mit NEON sogar ca. 84\% schneller als der C-Code. Näheres zu den gemessenen Zeiten sowie den Abweichungen kann der beigefügten Datei entnommen werden (dabei muss beachtet werden, dass die Messwerte mangels anderer Testmöglichkeit von einem Samsung Galaxy SIII stammen, auf dem \board ist die Laufzeit im Mittel 4 mal so groß).
 \subsection{Analyse und Bewertung}
-Abschließend kann man sagen, dass die NEON-Implementierung zwar mit Abstand am schnellsten ist. Jedoch treten kleine Ungenauigkeiten auf, die durch die Tatsache hervorgerufen werden, dass der NEON-Befehlssatz keine direkte Division ermöglicht und man mit einer Annäherung an den Kehrbruch arbeiten muss. Da sich die Abweichungen jedoch nicht wirklich bemerkbar machen und die Ergebnisse auf mehrere Stellen genau sind, ist diese Implementieren wohl die am geeignetsten. 
+Abschließend kann man sagen, dass die NEON-Implementierung zwar mit Abstand am schnellsten ist, dabei jedoch kleine Ungenauigkeiten auftreten, die durch die Tatsache hervorgerufen werden, dass der NEON-Befehlssatz keine direkte Division ermöglicht und man daher mit einer Annäherung an den Kehrbruch arbeiten muss. Da sich die Abweichungen jedoch nicht wirklich bemerkbar machen und die Ergebnisse auf mehrere Stellen genau sind, ist darf diese Implementierung wohl als die annähernd optimale Lösung angesehen werden. 
 \end{document}
 
 
