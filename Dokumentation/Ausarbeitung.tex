@@ -187,7 +187,7 @@ Nun sollte sichergestellt sein, dass gültige Daten eingelesen wurden, diese wer
 \\\\
 Abschließend wird die geöffnete Datei noch mittels \emph{fclose} geschlossen und ein Fehler ausgegeben, falls sie nicht geschlossen werden konnte.
 \begin{lstlisting}[language=C]
-if(!fclose(handle)) {
+if(fclose(handle) != 0) {
 	fprintf(stderr, "Fehler: Konnte Eingabedatei nicht schließen.\n");
 }
 \end{lstlisting}
