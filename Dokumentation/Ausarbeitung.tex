@@ -61,8 +61,8 @@ Die Formel zur Berechnung der Kapazität eines Kugelkondensators lautet:
 \begin{center} \begin{LARGE}
 $ C= 4 \pi \varepsilon_{0} \varepsilon_{r} \frac{r_{1} \cdot r_{2}} {r_{2} - r_{1}} $
 \end{LARGE} \end{center}
-$ \varepsilon_{0} $ bezeichnet dabei die elektrische Feldkonstante und beträgt $8.85418781762 \cdot 10^{-12}$.\\
-$ \varepsilon_{r} $ bezeichnet den Dielektrizitätswert des Materials (für Hartgummi $3.0$, für Hartpapier $5.0$).
+$ \varepsilon_{0} $ bezeichnet dabei die elektrische Feldkonstante und beträgt $8,85418781762 \cdot 10^{-12}$.\\
+$ \varepsilon_{r} $ bezeichnet den Dielektrizitätswert des Materials (für Hartgummi $3,0$, für Hartpapier $5,0$).
 
 \subsection{Implementierungsumgebung}
 Wir verwenden zur Entwicklung das \board, ein ARM Cortex-A8-System (aufbauend auf der ARMv7-Architektur, getaktet mit 1 GHz) mit NEON-VFP. Die NEON-Architektur erlaubt es, Berechnungen mit bis zu vier Fließkommazahlen (32 bit) gleichzeitig durchzuführen, wodurch eine hohe Performanz beim \emph{Number Crunching} erreicht wird. Dieses Verfahren wird \emph{SIMD} (von ARM selbst \emph{Advanced}-SIMD) genannt.\\
